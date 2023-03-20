@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        .speech-bubble {
+            position: relative;
+            background: #00aabb;
+            border-radius: 5px;
+            padding: 15px;
+            color: white;
+            display: inline-block;
+            max-width: 80%;
+            margin-bottom: 10px;
+        }
+    
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border: 15px solid transparent;
+            border-top-color: #00aabb;
+            border-bottom: 0;
+            border-left: 0;
+            margin-bottom: -15px;
+        }
+    
+        .question-bubble {
+            background: #f5f5f5;
+            color: #333;
+        }
+    
+        .question-bubble:after {
+            border-top-color: #f5f5f5;
+        }
+        .clickable-word {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .clickable-hint {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
+        #goal-word-display {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+        }
+        #timer-display {
+            position: fixed;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+        }
+    </style>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twenty Questions</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h2 id="goal-word-display" style="font-size: 2em;"></h2>
+    <h3 id="timer-display" style="font-size: 1.5em;"></h3>
+    <div class="container">
+        <div class="messages-widget">
+            <ul id="messages"></ul>
+        </div>
+        <div class="question-area" id="question-area">
+        </div>
+    </div>
+    <div class="hints-widget" id="hints-widget">
+        <div class="hints-column">
+          <h3>Meaning Hints</h3>
+          <ul id="meaning-hints"></ul>
+        </div>
+        <div class="hints-column">
+          <h3>Sounds Like Hints</h3>
+          <ul id="sounds-like-hints"></ul>
+        </div>
+      </div>
+    <button id="start-over-btn">Start Over</button>
+    <button id="start-new-game-btn">New Game</button>
+    <script src="script.js"></script>
+</body>
+</html>
