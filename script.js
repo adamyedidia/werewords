@@ -8,6 +8,7 @@ let meaningHints = [];
 let startTime = null;
 
 let timerInterval = null;
+let garbageHints = [];
 
 function updateTimerDisplay() {
     const timerDisplay = document.getElementById('timer-display');
@@ -237,6 +238,7 @@ async function startNewGame() {
       startOver();
       meaningHints = [];
       soundsLikeHints = [];
+      garbageHints = [];
       updateHintsWidget();
       await getNewQuestions(null, null);
 
@@ -293,18 +295,97 @@ function updateHintsWidget() {
     const response = await fetch('http://127.0.0.1:5000/hints', requestOptions);
   
     if (response.ok) {
-      // Remove the hint from the hints array and update the hints widget
-      if (hintType === 'meaning') {
-        meaningHints = meaningHints.filter((item) => item !== hint);
-      } else if (hintType === 'sounds_like') {
-        soundsLikeHints = soundsLikeHints.filter((item) => item !== hint);
-      }
-      updateHintsWidget();
+      // Move the hint to the garbage and update the widgets
+      await moveToGarbage(hint, hintType);
     } else {
       console.error('Error deleting the hint:', response.statusText);
     }
   }
   
+  function updateGarbageWidget() {
+    const garbageHintsList = document.getElementById('hints-garbage');
+
+    // Clear existing hints
+    garbageHintsList.innerHTML = '';
+
+    // Add hints to the garbage widget
+    garbageHints.forEach((hint) => {
+        const li = document.createElement('li');
+        li.textContent = hint;
+        li.classList.add('clickable-word');
+        li.addEventListener('click', async () => {
+            const data = await makeWordIntoHint(hint, true);
+            // Do something with the hint, like displaying it
+            soundsLikeHints = data.soundsLikeHints;
+            updateHintsWidget();
+        });
+        li.addEventListener('contextmenu', async (e) => {
+            e.preventDefault();
+            const data = await makeWordIntoHint(hint, false);
+            // Do something with the hint, like displaying it
+            meaningHints = data.meaningHints;
+            updateHintsWidget();
+        });
+
+        garbageHintsList.appendChild(li);
+    });
+}
+
+async function moveToGarbage(hint, hintType) {
+    // Add the hint to the garbageHints array
+    garbageHints.push(hint);
+
+    // Remove the hint from the original array and update the widgets
+    if (hintType === 'meaning') {
+        meaningHints = meaningHints.filter((item) => item !== hint);
+    } else if (hintType === 'sounds_like') {
+        soundsLikeHints = soundsLikeHints.filter((item) => item !== hint);
+    }
+    updateHintsWidget();
+    updateGarbageWidget();
+}function updateGarbageWidget() {
+    const garbageHintsList = document.getElementById('hints-garbage');
+
+    // Clear existing hints
+    garbageHintsList.innerHTML = '';
+
+    // Add hints to the garbage widget
+    garbageHints.forEach((hint) => {
+        const li = document.createElement('li');
+        li.textContent = hint;
+        li.classList.add('clickable-word');
+        li.addEventListener('click', async () => {
+            const data = await makeWordIntoHint(hint, true);
+            // Do something with the hint, like displaying it
+            soundsLikeHints = data.soundsLikeHints;
+            updateHintsWidget();
+        });
+        li.addEventListener('contextmenu', async (e) => {
+            e.preventDefault();
+            const data = await makeWordIntoHint(hint, false);
+            // Do something with the hint, like displaying it
+            meaningHints = data.meaningHints;
+            updateHintsWidget();
+        });
+
+        garbageHintsList.appendChild(li);
+    });
+}
+
+async function moveToGarbage(hint, hintType) {
+    // Add the hint to the garbageHints array
+    garbageHints.push(hint);
+
+    // Remove the hint from the original array and update the widgets
+    if (hintType === 'meaning') {
+        meaningHints = meaningHints.filter((item) => item !== hint);
+    } else if (hintType === 'sounds_like') {
+        soundsLikeHints = soundsLikeHints.filter((item) => item !== hint);
+    }
+    updateHintsWidget();
+    updateGarbageWidget();
+}
+
 window.addEventListener('load', () => {
     startNewGame();
     askQuestion();
