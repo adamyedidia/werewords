@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, make_response
 import openai
 import requests
-from settings import OPENAI_SECRET_KEY
+from settings import OPENAI_SECRET_KEY, PASSWORD
 import logging
 from werkzeug.exceptions import BadRequest
 from typing import Optional, Any
@@ -11,6 +11,7 @@ from enum import Enum
 from words import WORDS
 import random
 import time
+from secrets import compare_digest
 
 
 import redis as r
@@ -205,6 +206,9 @@ def get_response():
         return ('', 204, headers)  
     
     print('got here')
+
+    if not compare_digest(request.json.get('password') or '', PASSWORD):
+        return _process_response(_failure_response('Wrong password'))
 
     # set the endpoint URL
     url = "https://api.openai.com/v1/engines/davinci-codex/completions"

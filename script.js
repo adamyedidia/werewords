@@ -138,7 +138,7 @@ async function getNewQuestions(newQuestion, answer) {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newQuestion: newQuestion, userReply: answer })
+        body: JSON.stringify({ newQuestion: newQuestion, userReply: answer, password: localStorage.getItem('password') }),
     };
 
     console.log("Sending request to /questions", requestOptions);
