@@ -282,6 +282,7 @@ def get_response():
 
     victory = False
     victory_time = None
+    winning_question = None
 
     for question in new_questions:
         for word in question.split():       
@@ -289,8 +290,9 @@ def get_response():
                 victory = True
                 if (game_start_time := rget('game_start_time', game_id=game_id)) is not None:
                     victory_time = time.time() - float(game_start_time)
+                winning_question = question
 
-    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'goalWord': goal_word, 'questions': new_questions})
+    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
 
 
 # Start the server

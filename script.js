@@ -44,14 +44,14 @@ function addMessage(message, isQuestion) {
             wordSpan.addEventListener('click', async () => {
                 const data = await makeWordIntoHint(word, false);
                 // Do something with the hint, like displaying it
-                soundsLikeHints = data.soundsLikeHints;
+                soundsLikeHints = data.meaningHints;
                 updateHintsWidget();
             });
             wordSpan.addEventListener('contextmenu', async (e) => {
                 e.preventDefault()
                 const data = await makeWordIntoHint(word, true);
                 // Do something with the hint, like displaying it
-                meaningHints = data.meaningHints;
+                meaningHints = data.soundsLikeHints;
                 updateHintsWidget();
             });
         }
@@ -148,15 +148,15 @@ async function getNewQuestions(newQuestion, answer) {
     const data = await response.json();
 
     if (data.victory) {
-        displayVictoryMessage(data.goalWord, data.victoryTime);
+        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
     } else {
         return data.questions;
     }    
 }
 
-function displayVictoryMessage(goalWord, victoryTime) {
+function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     const victoryMessage = document.createElement('div');
-    victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${victoryTime}</strong> seconds.`;
+    victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${victoryTime}</strong> seconds. You won when ChatGPT asked: ${winningQuestion} `;
     victoryMessage.style.fontSize = '2em';
     victoryMessage.style.textAlign = 'center';
     victoryMessage.style.marginTop = '2em';
@@ -329,14 +329,14 @@ function updateHintsWidget() {
         li.addEventListener('click', async () => {
             const data = await makeWordIntoHint(hint, false);
             // Do something with the hint, like displaying it
-            soundsLikeHints = data.soundsLikeHints;
+            soundsLikeHints = data.meaningHints;
             updateHintsWidget();
         });
         li.addEventListener('contextmenu', async (e) => {
             e.preventDefault();
             const data = await makeWordIntoHint(hint, true);
             // Do something with the hint, like displaying it
-            meaningHints = data.meaningHints;
+            meaningHints = data.soundsLikeHints;
             updateHintsWidget();
         });
 
@@ -356,7 +356,9 @@ async function moveToGarbage(hint, hintType) {
     }
     updateHintsWidget();
     updateGarbageWidget();
-}function updateGarbageWidget() {
+}
+
+function updateGarbageWidget() {
     const garbageHintsList = document.getElementById('hints-garbage');
 
     // Clear existing hints
@@ -370,14 +372,14 @@ async function moveToGarbage(hint, hintType) {
         li.addEventListener('click', async () => {
             const data = await makeWordIntoHint(hint, false);
             // Do something with the hint, like displaying it
-            soundsLikeHints = data.soundsLikeHints;
+            soundsLikeHints = data.meaningHints;
             updateHintsWidget();
         });
         li.addEventListener('contextmenu', async (e) => {
             e.preventDefault();
             const data = await makeWordIntoHint(hint, true);
             // Do something with the hint, like displaying it
-            meaningHints = data.meaningHints;
+            meaningHints = data.soundsLikeHints;
             updateHintsWidget();
         });
 
