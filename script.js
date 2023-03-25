@@ -225,7 +225,18 @@ async function startOver() {
 
 async function startNewGame() {
     try {
-        const response = await fetch('http://127.0.0.1:5000/new_game', { method: 'POST' });
+        const goalWordDisplay = document.getElementById('new-world-text-field');
+        console.log(goalWordDisplay)
+        const newGoalWord = goalWordDisplay?.value;
+        const body = JSON.stringify({ goalWord: newGoalWord })
+        console.log(newGoalWord)
+        const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+        };
+        const response = await fetch('http://127.0.0.1:5000/new_game', requestOptions);
         const data = await response.json();
         startTime = data.gameStartTime * 1000;
         goalWord = data.goalWord;
@@ -395,37 +406,41 @@ window.addEventListener('load', () => {
 window.addEventListener('load', () => {
     // startOver();
 
-    document.addEventListener('keydown', async (event) => {
+    const handleKeyDown = async (event) => {
         if (event.key === 's') {
             await startOver();
         }
-    });
-    
-    const startOverButton = document.getElementById('start-over-button');
-    startOverButton.addEventListener('click', async () => {
-        await startOver();
-    });
-});
-
-window.addEventListener('load', () => {
-    // startOver();
-
-    document.addEventListener('keydown', async (event) => {
         if (event.key === 'n') {
             await startNewGame();
         }
-    });
-    
-    document.addEventListener('keydown', async (event) => {
         if (event.key === 'h') {
             await hintReminder();
         }
-    });
+    }
 
-    const startNewGameButton = document.getElementById('start-new-game-button');
+    document.addEventListener('keydown', handleKeyDown);
+    const startNewGameButton = document.getElementById('start-new-game-btn');
     startNewGameButton.addEventListener('click', async () => {
         await startNewGame();
     });
+    const startOverButton = document.getElementById('start-over-btn');
+    startOverButton.addEventListener('click', async () => {
+        await startOver();
+    });    
+
+    const inputField = document.getElementById('new-world-text-field');
+
+    // Add focus and blur event listeners to the input field
+    inputField.addEventListener('focus', () => {
+    // Remove the keydown listener from the document when the input field is focused
+    document.removeEventListener('keydown', handleKeyDown);
+    });
+
+    inputField.addEventListener('blur', () => {
+    // Add the keydown listener back to the document when the input field is blurred
+    document.addEventListener('keydown', handleKeyDown);
+    });
+
 });
 
 function toggleHowToPlay() {

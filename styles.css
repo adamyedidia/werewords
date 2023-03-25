@@ -45,6 +45,12 @@ body {
     left: 20px; /* adjust this value to change the horizontal position of the button */
   }  
 
+  #new-word-field {
+    position: fixed;
+    bottom: 40px; /* adjust this value to change the vertical position of the button */
+    left: 20px; /* adjust this value to change the horizontal position of the button */
+  }  
+
   .hints-widget {
     display: flex;
     background-color: white;
