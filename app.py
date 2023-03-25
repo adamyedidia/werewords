@@ -103,8 +103,13 @@ def start_new_game():
         }
         return ('', 204, headers)
 
-    if not request.json or not (goal_word := request.json.get('goalWord')):
+    if not request.json: 
+        goal_word = request.json.get('goalWord')
+        if not goal_word:
+            goal_word = random.choice(WORDS)
+    else:
         goal_word = random.choice(WORDS)
+
     game_start_time = time.time()
 
     game_id = token_hex(40)
@@ -288,9 +293,10 @@ def get_response():
         for word in question.split():       
             if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower() == goal_word:
                 victory = True
-                if (game_start_time := rget('game_start_time', game_id=game_id)) is not None:
+                game_start_time = rget('game_start_time', game_id=game_id)
+                if game_start_time is not None:
                     victory_time = time.time() - float(game_start_time)
-                winning_question = question
+                    winning_question = question
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
 
@@ -298,4 +304,4 @@ def get_response():
 # Start the server
 if __name__ == '__main__':
     print('app running!')
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

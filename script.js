@@ -88,7 +88,7 @@ async function makeWordIntoHint(word, isSoundsLike) {
         body: JSON.stringify({ hint: stripPunctuation(word), hintType: isSoundsLike ? 'sounds_like' : 'meaning', gameId}),
     };
 
-    const response = await fetch('http://127.0.0.1:5000/hints', requestOptions);
+    const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/hints', requestOptions);
     const data = await response.json();
     return data;
 }
@@ -144,7 +144,7 @@ async function getNewQuestions(newQuestion, answer) {
 
     console.log("Sending request to /questions", requestOptions);
 
-    const response = await fetch('http://127.0.0.1:5000/questions', requestOptions);
+    const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/questions', requestOptions);
     const data = await response.json();
 
     if (data.victory) {
@@ -237,7 +237,7 @@ async function startNewGame() {
             headers: { 'Content-Type': 'application/json' },
             body,
         };
-        const response = await fetch('http://127.0.0.1:5000/new_game', requestOptions);
+        const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/new_game', requestOptions);
         const data = await response.json();
         startTime = data.gameStartTime * 1000;
         goalWord = data.goalWord;
@@ -305,7 +305,7 @@ function updateHintsWidget() {
       body: JSON.stringify({ hint: hint, hintType: hintType, gameId }),
     };
   
-    const response = await fetch('http://127.0.0.1:5000/hints', requestOptions);
+    const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/hints', requestOptions);
   
     if (response.ok) {
       // Move the hint to the garbage and update the widgets
