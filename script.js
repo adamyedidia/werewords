@@ -45,12 +45,14 @@ function addMessage(message, isQuestion) {
                 const data = await makeWordIntoHint(word, false);
                 // Do something with the hint, like displaying it
                 soundsLikeHints = data.soundsLikeHints;
+                meaningHints = data.meaningHints;
                 updateHintsWidget();
             });
             wordSpan.addEventListener('contextmenu', async (e) => {
                 e.preventDefault()
                 const data = await makeWordIntoHint(word, true);
                 // Do something with the hint, like displaying it
+                soundsLikeHints = data.soundsLikeHints;
                 meaningHints = data.meaningHints;
                 updateHintsWidget();
             });
@@ -251,7 +253,9 @@ async function startNewGame() {
       startOver();
       meaningHints = [];
       soundsLikeHints = [];
-      garbageHints.splice(0,garbageHints.length)
+      while(garbageHints.length > 0) {
+        garbageHints.pop();
+      }
       updateHintsWidget();
       await getNewQuestions(null, null);
 
@@ -330,12 +334,14 @@ function updateHintsWidget() {
             const data = await makeWordIntoHint(hint, false);
             // Do something with the hint, like displaying it
             soundsLikeHints = data.soundsLikeHints;
+            meaningHints = data.meaningHints;
             updateHintsWidget();
         });
         li.addEventListener('contextmenu', async (e) => {
             e.preventDefault();
             const data = await makeWordIntoHint(hint, true);
             // Do something with the hint, like displaying it
+            soundsLikeHints = data.soundsLikeHints;
             meaningHints = data.meaningHints;
             updateHintsWidget();
         });
@@ -373,12 +379,14 @@ function updateGarbageWidget() {
             const data = await makeWordIntoHint(hint, false);
             // Do something with the hint, like displaying it
             soundsLikeHints = data.soundsLikeHints;
+            meaningHints = data.meaningHints;
             updateHintsWidget();
         });
         li.addEventListener('contextmenu', async (e) => {
             e.preventDefault();
             const data = await makeWordIntoHint(hint, true);
             // Do something with the hint, like displaying it
+            soundsLikeHints = data.soundsLikeHints;
             meaningHints = data.meaningHints;
             updateHintsWidget();
         });
