@@ -1,133 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
-        .speech-bubble {
-            position: relative;
-            background: #00aabb;
-            border-radius: 5px;
-            padding: 15px;
-            color: white;
-            display: inline-block;
-            max-width: 80%;
-            margin-bottom: 10px;
-        }
-    
-        .speech-bubble:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 20px;
-            width: 0;
-            height: 0;
-            border: 15px solid transparent;
-            border-top-color: #00aabb;
-            border-bottom: 0;
-            border-left: 0;
-            margin-bottom: -15px;
-        }
-    
-        .question-bubble {
-            background: #f5f5f5;
-            color: #333;
-        }
-    
-        .question-bubble:after {
-            border-top-color: #f5f5f5;
-        }
-        .clickable-word {
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .clickable-hint {
-            cursor: pointer;
-            color: blue;
-            text-decoration: underline;
-        }
-        #goal-word-display {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2em;
-        }
-        #timer-display {
-            position: fixed;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.5em;
-        }
-    </style>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Twenty Questions</title>
+    <title>Password Prompt</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h2 id="goal-word-display" style="font-size: 2em;"></h2>
-    <h3 id="timer-display" style="font-size: 1.5em;"></h3>
-    <div class="container">
-        <div class="messages-widget">
-            <ul id="messages"></ul>
-        </div>
-        <div class="question-area" id="question-area">
-        </div>
+    <div class="password-prompt">
+        <h1>Please enter the password:</h1>
+        <input type="password" id="passwordInput">
+        <button id="submitPassword">Submit</button>
     </div>
-    <div class="hints-container">
-        <div class="hints-widget" id="hints-widget">
-            <div class="hints-column">
-                <h3>Meaning Hints</h3>
-                <ul id="meaning-hints"></ul>
-            </div>
-            <div class="hints-column">
-                <h3>Sounds Like Hints</h3>
-                <ul id="sounds-like-hints"></ul>
-            </div>
-        </div>
-        <div class="hints-widget" id="hints-widget">
-            <div class="hints-column">
-                <h3>Hints Garbage</h3>
-                <ul id="hints-garbage"></ul>
-            </div>
-        </div>
-    </div>
-    <button id="start-over-btn">Start Over</button>
-    <div id="new-word-field">
-        <!-- Text field -->
-        <input type="text" id="new-world-text-field" placeholder="Goal word">
-    </div>
-    <button id="start-new-game-btn">New Game</button>
-    <div class="how-to-play-wrapper">
-        <div class="how-to-play" onclick="toggleHowToPlay()">
-            <span class="how-to-play-text">How to play</span>
-            <div class="how-to-play-popup" id="how-to-play-popup">
-                <h3>How to play</h3>
-                <p>You are basically playing twenty questions/Werewords with ChatGPT, but there are a few major differences:</p>
-                <p>-There is no limit to the number of questions.</p>
-                <p>-Your goal is to induce ChatGPT to say the goal word by any means you can think of. You win as soon as ChatGPT uses your word exactly, in any of the questions it asks you. </p>
-                <p>-Try to win as quickly as possible.</p>
-                <p>-ChatGPT will ask you questions at the center of the webpage. You may answer a question with "yes" by left-clicking a question, or with "no" by right-clicking the question.</p>
-                <p>-When you answer a question, that will cause the question and your answer to be added to the chat history in the upper-right of the screen. It will also trigger ChatGPT to come up with three more questions to ask you.</p>
-                <p>-Questions expire after twenty seconds. You need not answer every question.</p>
-                <p><b>Using hints to win</b></p>
-                <p>-"Hints" are a mechanic in this game that are not present in ordinary questions/Werewords. There is no shame in using hints; indeed, it will usually be necessary to make use of the hint mechanic in order to win at any but the very easiest words.</p>
-                <p>-The way hints work is you can left- or right-click any word said by ChatGPT in the conversation log in the upper-right. When you do, that word will be made into a "meaning" or "sounds like" hint, respectively.</p>
-                <p>-Hints are stored in the upper-left of the webpage. To get rid of a hint, you can right-click it; that moves it to the "hint garbage". From there, you can still get it back by left- or right-clicking it again.</p>
-                <p>-To get ChatGPT to try to guess your word using the hints you've given, <b>you can press the "h" key</b>. This causes a new back-and-forth in the dialog that causes ChatGPT to consider the hints and try to guess your word.</p>
-                <p>-You can use this mechanic to essentially use a "multi-step" process to get to a difficult or abstract word.</p>
-                <p><b>Other options</b></p>
-                <p>-If you want to clear the conversation history, press the "s" key or the "start over" button. This will preserve your hints, the timer, and the question count, but will clear the conversation history.</p>
-                <p>-If you want to start a new game, press the "n" key or the "new game" button. This will reset the whole game, and give you a new word to go for. If you want to choose which word to go for, you can pick one using the text box.</p>
-                <p><b>Strategy tips</b></p>
-                <p>-Hints are a key part of the strategy of the game. For example, in an early run of this game, I had the word "death"; I started by trying to go through emotions (which are a relatively high-salience concept to ChatGPT) to grief. Instead, I got as far as "negative emotion", extracted the word "negative" as a clue, and restarted the conversation. On the next run, it asked me if it was a "living thing", and I extracted the word "living" as a clue. The words "negative" and "living" as hints were enough to provoke ChatGPT to say "death."</p>
-                <p>-Remember that you can have an entire conversation with the goal not of getting to the goal word itself, but only to get to a specific useful hint word. Once you've gotten to it, extract the word as a hint and start the conversation over by hitting "s".</p>
-                <p>-It's often better not to answer a question than to answer it in the negative when the question is unrelated to your word. For example, if your word is "philosophy" and ChatGPT asks "Is it related to tornados?", answering the question with "no" will often provoke further questions that are tornado-related rather than philosophy-related.</p>
-                <p>-Don't be afraid to restart the conversation aggressively! Oftentimes ChatGPT gets stuck in an unhelpful rut. Restarting the conversation is usually the only way to get back on track.</p>
-            </div>
-        </div>
-    </div>
-    <script src="script.js"></script>
+    <script src="landing_script.js"></script>
 </body>
 </html>
