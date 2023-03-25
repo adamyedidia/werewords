@@ -179,14 +179,14 @@ function handleClick(e) {
     addMessage(`A: ${answer}`, false);
 
     e.target.remove();
-    askQuestion(answer);
+    askQuestion(question, answer);
 }
 
 function hintReminder() {
     addMessage(`Q: I'm a bit stuck. What should I do?`, true);
     addMessage(`A: Remember your hints. Try guessing my word!`, false);
 
-    askQuestion('hints_reminder');
+    askQuestion('', 'hints_reminder');
 }
 
 
@@ -202,9 +202,9 @@ function processQuestion(question) {
 }
 
 
-async function askQuestion(answer) {
+async function askQuestion(question, answer) {
     try {
-        const newQuestion = answer === 'hints_reminder' ? "I'm a bit stuck. What should I do?" : questions.length > 0 ? questions[questions.length - 1] : null;
+        const newQuestion = answer === 'hints_reminder' ? "I'm a bit stuck. What should I do?" : question;
         const newQuestionsFromServer = await getNewQuestions(newQuestion, answer);
         questions.push(...newQuestionsFromServer);
 
@@ -253,10 +253,9 @@ async function startNewGame() {
       startOver();
       meaningHints = [];
       soundsLikeHints = [];
-      while(garbageHints.length > 0) {
-        garbageHints.pop();
-      }
+      garbageHints = [];
       updateHintsWidget();
+      updateGarbageWidget();
       await getNewQuestions(null, null);
 
       if (goalWord) {
