@@ -11,13 +11,8 @@ from enum import Enum
 from words import WORDS
 import random
 import time
-from secrets import compare_digest
-
-
-import redis as r
-
-redis = r.Redis(connection_pool=r.ConnectionPool(host='localhost', port=6379, db=0))
-pretend_redis_dict: dict[str, Optional[str]] = {}
+from secrets import compare_digest, token_hex
+from redis_utils import rget, rset
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -100,9 +95,6 @@ def add_cors_headers(response):
 
 @app.route('/new_game', methods=['POST', 'OPTIONS'])
 def start_new_game():
-    redis.set('sounds_like_hints', '[]')
-    redis.set('meaning_hints', '[]')
-
     if request.method == 'OPTIONS':
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -111,20 +103,22 @@ def start_new_game():
         }
         return ('', 204, headers)
 
-    print(request.json)
-    print(request)
-    print(request.json.get('goalWord'))
-
     if not request.json or not (goal_word := request.json.get('goalWord')):
         goal_word = random.choice(WORDS)
     game_start_time = time.time()
 
-    redis.set('goal_word', goal_word)
-    redis.set('game_start_time', game_start_time)
+    game_id = token_hex(40)
+
+    rset('sounds_like_hints', '[]', game_id=game_id)
+    rset('meaning_hints', '[]', game_id=game_id)
+    rset('goal_word', goal_word, game_id=game_id)
+    rset('game_start_time', game_start_time, game_id=game_id)
+    rset('question_count', '0', game_id=game_id)
 
     return _process_response({
         'goalWord': goal_word,
         'gameStartTime': game_start_time,
+        'gameId': game_id,
     })
 
 
@@ -141,24 +135,25 @@ def delete_hint():
     
     hint = request.json.get('hint')
     hint_type = request.json.get('hintType')
+    game_id = request.json.get('gameId')
 
     try:
         hint_type = HintType(hint_type)
     except ValueError:
         return _process_response(_failure_response(f'Invalid hint type {hint_type}'))
-    
+
     if hint_type == HintType.SOUNDS_LIKE:
-        sounds_like_hints = json.loads(redis.get('sounds_like_hints') or '[]')
+        sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
         sounds_like_hints = [h for h in sounds_like_hints if not h == hint]
-        redis.set('sounds_like_hints', json.dumps(sounds_like_hints))
+        rset('sounds_like_hints', json.dumps(sounds_like_hints), game_id=game_id)
     elif hint_type == HintType.MEANING:
-        meaning_hints = json.loads(redis.get('meaning_hints') or '[]')
+        meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
         meaning_hints = [h for h in meaning_hints if not h == hint]
-        redis.set('meaning_hints', json.dumps(meaning_hints))
+        rset(f'meaning_hints', json.dumps(meaning_hints), game_id=game_id)
 
     return _process_response({
-        'soundsLikeHints': json.loads(redis.get('sounds_like_hints') or '[]'),
-        'meaningHints': json.loads(redis.get('meaning_hints') or '[]')
+        'soundsLikeHints': json.loads(rget('sounds_like_hints', game_id=game_id) or '[]'),
+        'meaningHints': json.loads(rget('meaning_hints', game_id=game_id) or '[]')
     })
 
 
@@ -175,6 +170,7 @@ def make_word_into_hint():
     
     hint = request.json.get('hint')
     hint_type = request.json.get('hintType')
+    game_id = request.json.get('gameId')
 
     try:
         hint_type = HintType(hint_type)
@@ -182,17 +178,17 @@ def make_word_into_hint():
         return _process_response(_failure_response(f'Invalid hint type {hint_type}'))
     
     if hint_type == HintType.SOUNDS_LIKE:
-        sounds_like_hints = json.loads(redis.get('sounds_like_hints') or '[]')
+        sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
         sounds_like_hints.append(hint)
-        redis.set('sounds_like_hints', json.dumps(sounds_like_hints))
+        rset('sounds_like_hints', json.dumps(sounds_like_hints), game_id=game_id)
     elif hint_type == HintType.MEANING:
-        meaning_hints = json.loads(redis.get('meaning_hints') or '[]')
+        meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
         meaning_hints.append(hint)
-        redis.set('meaning_hints', json.dumps(meaning_hints))
+        rset('meaning_hints', json.dumps(meaning_hints), game_id=game_id)
 
     return _process_response({
-        'soundsLikeHints': json.loads(redis.get('sounds_like_hints') or '[]'),
-        'meaningHints': json.loads(redis.get('meaning_hints') or '[]')
+        'soundsLikeHints': json.loads(rget('sounds_like_hints', game_id=game_id) or '[]'),
+        'meaningHints': json.loads(rget('meaning_hints', game_id=game_id) or '[]')
     })
 
 
@@ -219,9 +215,10 @@ def get_response():
 
     new_question = request.json.get('newQuestion')
     raw_user_reply = request.json.get('userReply')
+    game_id = request.json.get('gameId')
 
-    sounds_like_hints = json.loads(redis.get('sounds_like_hints') or '[]')
-    meaning_hints = json.loads(redis.get('meaning_hints') or '[]')
+    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
+    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
 
 
     sounds_like_hints_initial_str = (
@@ -235,17 +232,17 @@ def get_response():
 
     if new_question is None or raw_user_reply is None:
         # Start over command
-        redis.set('messages', '[]')
+        rset('messages', '[]', game_id=game_id)
         messages = []
     else:
         try:
             user_reply = UserReply(raw_user_reply)
         except ValueError:
             return _process_response(_failure_response(f'Invalid user reply {raw_user_reply}'))        
-        messages = json.loads(redis.get('messages') or '[]')
+        messages = json.loads(rget('messages', game_id=game_id) or '[]')
         messages.append({"role": "assistant", "content": new_question})
         messages.append({"role": "user", "content": process_user_reply(user_reply, sounds_like_hints, meaning_hints)})    
-        redis.set('messages', json.dumps(messages))    
+        rset('messages', json.dumps(messages), game_id=game_id)    
 
     if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
         return _process_response(_failure_response('Input too long'))
@@ -281,19 +278,19 @@ def get_response():
 
     new_questions = [choice['message']['content'] for choice in response['choices']]
 
-    goal_word = redis.get('goal_word')
+    goal_word = rget('goal_word', game_id=game_id)
 
     victory = False
     victory_time = None
 
     for question in new_questions:
         for word in question.split():       
-            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower() == goal_word.decode('utf-8'):
+            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower() == goal_word:
                 victory = True
-                if (game_start_time := redis.get('game_start_time')) is not None:
+                if (game_start_time := rget('game_start_time', game_id=game_id)) is not None:
                     victory_time = time.time() - float(game_start_time)
 
-    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'goalWord': goal_word.decode('utf-8'), 'questions': new_questions})
+    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'goalWord': goal_word, 'questions': new_questions})
 
 
 # Start the server
