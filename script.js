@@ -427,3 +427,15 @@ window.addEventListener('load', () => {
         await startNewGame();
     });
 });
+
+function toggleHowToPlay() {
+    const howToPlayPopup = document.getElementById('how-to-play-popup');
+    console.log(howToPlayPopup);
+    if (howToPlayPopup.style.visibility === 'hidden') {
+      howToPlayPopup.style.visibility = 'visible';
+      howToPlayPopup.style.opacity = '1';
+    } else {
+      howToPlayPopup.style.visibility = 'hidden';
+      howToPlayPopup.style.opacity = '0';
+    }
+  }
