@@ -9,6 +9,7 @@ let startTime = null;
 
 let timerInterval = null;
 let garbageHints = [];
+let gameId = null;
 
 function updateTimerDisplay() {
     const timerDisplay = document.getElementById('timer-display');
@@ -84,7 +85,7 @@ async function makeWordIntoHint(word, isSoundsLike) {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hint: stripPunctuation(word), hintType: isSoundsLike ? 'sounds_like' : 'meaning' })
+        body: JSON.stringify({ hint: stripPunctuation(word), hintType: isSoundsLike ? 'sounds_like' : 'meaning', gameId}),
     };
 
     const response = await fetch('http://127.0.0.1:5000/hints', requestOptions);
@@ -138,7 +139,7 @@ async function getNewQuestions(newQuestion, answer) {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newQuestion: newQuestion, userReply: answer, password: localStorage.getItem('password') }),
+        body: JSON.stringify({ newQuestion: newQuestion, userReply: answer, password: localStorage.getItem('password'), gameId }),
     };
 
     console.log("Sending request to /questions", requestOptions);
@@ -240,6 +241,7 @@ async function startNewGame() {
         const data = await response.json();
         startTime = data.gameStartTime * 1000;
         goalWord = data.goalWord;
+        gameId = data.gameId;
         // const goalWordDisplay = document.getElementById('goal-word-display');
         // goalWordDisplay.textContent = `The word is ${goalWord}`;
       } catch (error) {
@@ -300,7 +302,7 @@ function updateHintsWidget() {
       method: 'DELETE',
       mode: 'cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hint: hint, hintType: hintType }),
+      body: JSON.stringify({ hint: hint, hintType: hintType, gameId }),
     };
   
     const response = await fetch('http://127.0.0.1:5000/hints', requestOptions);
