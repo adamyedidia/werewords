@@ -103,7 +103,20 @@ def start_new_game():
     redis.set('sounds_like_hints', '[]')
     redis.set('meaning_hints', '[]')
 
-    goal_word = random.choice(WORDS)
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'DELETE',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        }
+        return ('', 204, headers)
+
+    print(request.json)
+    print(request)
+    print(request.json.get('goalWord'))
+
+    if not request.json or not (goal_word := request.json.get('goalWord')):
+        goal_word = random.choice(WORDS)
     game_start_time = time.time()
 
     redis.set('goal_word', goal_word)
@@ -185,17 +198,10 @@ def make_word_into_hint():
 
 @app.route("/questions", methods=['POST', 'OPTIONS'])
 def get_response():
-    print("get_response() function called")
-    print('hello')
-    print(request.method)
-    print('json')
-    # print(f'json: {request.json}')
-    # print("Incoming request:", request.method, request.json)
     # set your API key
     openai.api_key = OPENAI_SECRET_KEY
 
     
-    print('hello')
     # logger.warning('hello')
     if request.method == 'OPTIONS':
         headers = {
@@ -205,8 +211,6 @@ def get_response():
         }
         return ('', 204, headers)  
     
-    print('got here')
-
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
 
@@ -215,7 +219,6 @@ def get_response():
 
     new_question = request.json.get('newQuestion')
     raw_user_reply = request.json.get('userReply')
-    print('got here2')
 
     sounds_like_hints = json.loads(redis.get('sounds_like_hints') or '[]')
     meaning_hints = json.loads(redis.get('meaning_hints') or '[]')
@@ -269,16 +272,12 @@ def get_response():
                 *messages,
             ]
     
-    print(messages)
-
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages,
         temperature=1.0,
         n=3,
     )
-
-    print(response['choices'])
 
     new_questions = [choice['message']['content'] for choice in response['choices']]
 
@@ -287,24 +286,12 @@ def get_response():
     victory = False
     victory_time = None
 
-    print(new_questions)
-
     for question in new_questions:
-        print(question)
-        print(question.split())
-        for word in question.split():
-            print(word)
-            print(word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').strip().lower())
-            print(goal_word)            
+        for word in question.split():       
             if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower() == goal_word.decode('utf-8'):
                 victory = True
                 if (game_start_time := redis.get('game_start_time')) is not None:
                     victory_time = time.time() - float(game_start_time)
-
-
-
-
-    print(f'This is the new question: {new_question}')
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'goalWord': goal_word.decode('utf-8'), 'questions': new_questions})
 
