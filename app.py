@@ -13,6 +13,9 @@ import random
 import time
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
+import nltk
+nltk.download('wordnet')
+from nltk.stern import WordNetLemmatizer
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -289,9 +292,15 @@ def get_response():
     victory_time = None
     winning_question = None
 
+    def have_same_root(word1, word2):
+        lemmatizer = WordNetLemmatizer()
+        lemma1 = lemmatizer.lemmatize(word1)
+        lemma2 = lemmatizer.lemmatize(word2)
+        return lemma1 == lemma2
+
     for question in new_questions:
         for word in question.split():       
-            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower() == goal_word:
+            if have_same_root(word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower(), goal_word):
                 victory = True
                 game_start_time = rget('game_start_time', game_id=game_id)
                 if game_start_time is not None:
