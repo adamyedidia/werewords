@@ -257,7 +257,7 @@ async function startNewGame() {
 
       if (goalWord) {
         const goalWordDisplay = document.getElementById('goal-word-display');
-        goalWordDisplay.textContent = `The word is ${goalWord}`;
+        goalWordDisplay.textContent = `The goal word is ${goalWord}`;
         startTimer();
       }
 
