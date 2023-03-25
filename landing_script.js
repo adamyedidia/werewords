@@ -8,7 +8,7 @@ function handlePasswordSubmit() {
 
     if (password !== "" && password !== null && password !== undefined) {
         // Redirect to the existing index.html file
-        window.location.href = 'index.html';
+        window.location.href = 'game_page.html';
     }
 }
 
