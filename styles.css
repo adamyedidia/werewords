@@ -31,7 +31,7 @@ body {
 .fade-out {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 20s;
+    transition: opacity 30s;
 }
 
 #start-over-btn {
