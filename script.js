@@ -133,7 +133,7 @@ function update() {
 
 setTimeout(() => {
     requestAnimationFrame(update);
-}, 5000); // start fading out after 5 seconds
+}, 10000); // start fading out after 5 seconds
 }
 
 async function getNewQuestions(newQuestion, answer) {
@@ -198,7 +198,7 @@ function processQuestion(question) {
     bubble.addEventListener('contextmenu', handleClick);
     questionArea.appendChild(bubble);
 
-    fadeOutAndRemove(bubble, 20000);    
+    fadeOutAndRemove(bubble, 30000);    
 }
 
 
