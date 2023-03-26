@@ -3,6 +3,9 @@ const messages = document.getElementById('messages');
 let questions = ['Is it a noun?'];
 questions.forEach(processQuestion)
 
+URL = 'http://127.0.0.1:5001'
+// URL = 'http://ec2-34-192-101-140.compute-1.amazonaws.com:5000'
+
 let soundsLikeHints = [];
 let meaningHints = [];
 let startTime = null;
@@ -90,7 +93,7 @@ async function makeWordIntoHint(word, isSoundsLike) {
         body: JSON.stringify({ hint: stripPunctuation(word), hintType: isSoundsLike ? 'sounds_like' : 'meaning', gameId}),
     };
 
-    const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/hints', requestOptions);
+    const response = await fetch(`${URL}/hints`, requestOptions);
     const data = await response.json();
     return data;
 }
@@ -146,7 +149,7 @@ async function getNewQuestions(newQuestion, answer) {
 
     console.log("Sending request to /questions", requestOptions);
 
-    const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/questions', requestOptions);
+    const response = await fetch(`${URL}/questions`, requestOptions);
     const data = await response.json();
 
     if (data.victory) {
@@ -246,7 +249,7 @@ async function startNewGame() {
             headers: { 'Content-Type': 'application/json' },
             body,
         };
-        const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/new_game', requestOptions);
+        const response = await fetch(`${URL}/new_game`, requestOptions);
         const data = await response.json();
         startTime = data.gameStartTime * 1000;
         goalWord = data.goalWord;
@@ -315,7 +318,7 @@ function updateHintsWidget() {
       body: JSON.stringify({ hint: hint, hintType: hintType, gameId }),
     };
   
-    const response = await fetch('http://ec2-34-192-101-140.compute-1.amazonaws.com:5000/hints', requestOptions);
+    const response = await fetch(`${URL}/hints`, requestOptions);
   
     if (response.ok) {
       // Move the hint to the garbage and update the widgets
@@ -356,22 +359,6 @@ function updateHintsWidget() {
     });
 }
 
-async function moveToGarbage(hint, hintType) {
-    // Add the hint to the garbageHints array
-    if (!garbageHints.includes(hint)) {
-        garbageHints.push(hint);
-    }
-
-    // Remove the hint from the original array and update the widgets
-    if (hintType === 'meaning') {
-        meaningHints = meaningHints.filter((item) => item !== hint);
-    } else if (hintType === 'sounds_like') {
-        soundsLikeHints = soundsLikeHints.filter((item) => item !== hint);
-    }
-    updateHintsWidget();
-    updateGarbageWidget();
-}
-
 function updateGarbageWidget() {
     const garbageHintsList = document.getElementById('hints-garbage');
 
@@ -405,7 +392,9 @@ function updateGarbageWidget() {
 
 async function moveToGarbage(hint, hintType) {
     // Add the hint to the garbageHints array
-    garbageHints.push(hint);
+    if (!garbageHints.includes(hint)) {
+        garbageHints.push(hint);
+    }
 
     // Remove the hint from the original array and update the widgets
     if (hintType === 'meaning') {
