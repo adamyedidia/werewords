@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, make_response
 import openai
 import requests
-from settings import OPENAI_SECRET_KEY, PASSWORD
+from settings import OPENAI_SECRET_KEY, PASSWORD, LOCAL
 import logging
 from werkzeug.exceptions import BadRequest
 from typing import Optional, Any
@@ -188,11 +188,13 @@ def make_word_into_hint():
     
     if hint_type == HintType.SOUNDS_LIKE:
         sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
-        sounds_like_hints.append(hint)
+        if hint not in sounds_like_hints:
+            sounds_like_hints.append(hint)
         rset('sounds_like_hints', json.dumps(sounds_like_hints), game_id=game_id)
     elif hint_type == HintType.MEANING:
         meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
-        meaning_hints.append(hint)
+        if hint not in meaning_hints:
+            meaning_hints.append(hint)
         rset('meaning_hints', json.dumps(meaning_hints), game_id=game_id)
 
     return _process_response({
@@ -308,4 +310,4 @@ def get_response():
 # Start the server
 if __name__ == '__main__':
     print('app running!')
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001 if LOCAL else 5000)
