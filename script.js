@@ -358,7 +358,9 @@ function updateHintsWidget() {
 
 async function moveToGarbage(hint, hintType) {
     // Add the hint to the garbageHints array
-    garbageHints.push(hint);
+    if (!garbageHints.includes(hint)) {
+        garbageHints.push(hint);
+    }
 
     // Remove the hint from the original array and update the widgets
     if (hintType === 'meaning') {
