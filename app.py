@@ -107,7 +107,7 @@ def start_new_game():
         }
         return ('', 204, headers)
 
-    if not request.json: 
+    if request.json: 
         goal_word = request.json.get('goalWord')
         if not goal_word:
             goal_word = random.choice(WORDS)
