@@ -297,7 +297,7 @@ def get_response():
 
     for question in new_questions:
         for word in question.split():       
-            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').strip().lower() == goal_word:
+            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').replace(':', '').strip().lower() == goal_word:
                 victory = True
                 game_start_time = rget('game_start_time', game_id=game_id)
                 if game_start_time is not None:

@@ -159,9 +159,30 @@ async function getNewQuestions(newQuestion, answer) {
     }    
 }
 
+function formatTimeDelta(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const sec = seconds % 60;
+    const roundedSec = Math.round(sec * 10) / 10;
+  
+    const formatUnit = (value, unit) => {
+      return value > 0 ? `${value} ${unit}${value === 1 ? '' : 's'}` : '';
+    };
+  
+    const formattedHours = formatUnit(hours, 'hour');
+    const formattedMinutes = formatUnit(minutes, 'minute');
+    const formattedSeconds = formatUnit(roundedSec, 'second');
+  
+    const timeStringArray = [formattedHours, formattedMinutes, formattedSeconds].filter(str => str.length > 0);
+    const lastElement = timeStringArray.pop();
+    const timeString = timeStringArray.length > 0 ? `${timeStringArray.join(', ')} and ${lastElement}` : lastElement;
+  
+    return timeString;
+}
+
 function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     const victoryMessage = document.createElement('div');
-    victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${victoryTime}</strong> seconds. You won when ChatGPT asked: ${winningQuestion} `;
+    victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${formatTimeDelta(victoryTime)}</strong>. You won when ChatGPT asked: ${winningQuestion} `;
     victoryMessage.style.fontSize = '2em';
     victoryMessage.style.textAlign = 'center';
     victoryMessage.style.marginTop = '2em';
