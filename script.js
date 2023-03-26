@@ -189,6 +189,13 @@ function hintReminder() {
     askQuestion('', 'hints_reminder');
 }
 
+function rootsReminder() {
+    addMessage(`Q: I'm a bit stuck. What should I do?`, true);
+    addMessage(`A: Try guessing a word that shares a root with a word in the list of hints`, false);
+
+    askQuestion('', 'roots_reminder');
+}
+
 
 function processQuestion(question) {
     const bubble = document.createElement('div');
@@ -204,7 +211,7 @@ function processQuestion(question) {
 
 async function askQuestion(question, answer) {
     try {
-        const newQuestion = answer === 'hints_reminder' ? "I'm a bit stuck. What should I do?" : question;
+        const newQuestion = answer === 'hints_reminder' || answer === 'roots_reminder' ? "I'm a bit stuck. What should I do?" : question;
         const newQuestionsFromServer = await getNewQuestions(newQuestion, answer);
         questions.push(...newQuestionsFromServer);
 
@@ -427,6 +434,9 @@ window.addEventListener('load', () => {
         if (event.key === 'h') {
             await hintReminder();
         }
+        if (event.key === 'r') {
+            await rootsReminder();
+        }        
     }
 
     document.addEventListener('keydown', handleKeyDown);

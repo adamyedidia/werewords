@@ -23,6 +23,7 @@ class UserReply(Enum):
     MAYBE = 'maybe'
     BROADEN_OUT = 'broaden_out'
     HINTS_REMINDER = 'hints_reminder'
+    ROOTS_REMINDER = 'roots_reminder'
 
 
 class HintType(Enum):
@@ -82,6 +83,9 @@ def process_user_reply(user_reply: UserReply, sounds_like_hints: Optional[list[s
                 )
             else:
                 return "Try guessing my word now!"
+            
+    elif user_reply == UserReply.ROOTS_REMINDER:
+        return f"Try listing the first ten words you think of that are a different form of the following words: {', '.join([*(meaning_hints or []), *(sounds_like_hints or [])])}"
     else:
         raise Exception(f"Invalid user reply {user_reply}")
 
