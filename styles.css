@@ -138,3 +138,10 @@ body {
     transform: translateX(-50%);
     z-index: 2;
   }
+
+  .command-reference {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
