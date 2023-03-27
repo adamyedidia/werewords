@@ -3,8 +3,8 @@ const messages = document.getElementById('messages');
 let questions = ['Is it a noun?'];
 questions.forEach(processQuestion)
 
-URL = 'http://127.0.0.1:5001'
-// URL = 'http://ec2-34-192-101-140.compute-1.amazonaws.com:5000'
+// URL = 'http://127.0.0.1:5001'
+URL = 'http://ec2-34-192-101-140.compute-1.amazonaws.com:5000'
 
 let soundsLikeHints = [];
 let meaningHints = [];
