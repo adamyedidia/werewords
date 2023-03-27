@@ -13,9 +13,12 @@ import random
 import time
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
+from threading import Lock
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
+
+leaderboard_lock = Lock()
 
 class UserReply(Enum):
     YES = 'yes'
@@ -227,6 +230,7 @@ def get_response():
     new_question = request.json.get('newQuestion')
     raw_user_reply = request.json.get('userReply')
     game_id = request.json.get('gameId')
+    leaderboard_name = request.json.get('leaderboardName')
 
     sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
     meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
@@ -304,7 +308,24 @@ def get_response():
                     victory_time = time.time() - float(game_start_time)
                     winning_question = question
 
-    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
+    if victory:
+        with leaderboard_lock:
+            leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
+            games_with_matching_word = leaderboard_games[goal_word]
+            if games_with_matching_word:
+                games_with_matching_word.append([game_id, victory_time])
+                games_with_matching_word.sort(key=lambda x: x[1])
+            else:
+                leaderboard_games[goal_word] = [[game_id, victory_time]]
+            rset('leaderboard_games', json.dumps(leaderboard_games), game_id=None)
+
+        if leaderboard_name:
+            leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
+            if leaderboard_names.get(game_id) is None:
+                leaderboard_names[game_id] = leaderboard_name
+            rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None)
+
+    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions, 'leaderboardName': leaderboard_name, 'gameId': game_id})
 
 
 # Start the server
