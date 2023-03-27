@@ -328,6 +328,18 @@ def get_response():
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions, 'leaderboardName': leaderboard_name, 'gameId': game_id})
 
 
+@app.route("/leaderboard_names", methods=['POST', 'OPTIONS'])
+def present_leaderboard_name():
+
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        }
+        return ('', 204, headers)  
+        
+
 # Start the server
 if __name__ == '__main__':
     print('app running!')
