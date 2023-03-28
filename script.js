@@ -38,7 +38,7 @@ function addMessage(message, isQuestion) {
     }
 
     // Split the message into words and create clickable elements
-    const words = message.split(' ');
+    const words = message.replace(/\s+/g, ' ').split(' ');
     words.forEach((word, index) => {
         const wordSpan = document.createElement('span');
         wordSpan.textContent = word;
