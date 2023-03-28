@@ -477,7 +477,11 @@ window.addEventListener('load', () => {
         }
         if (event.key === 'd') {
             removeHint();
-        }        
+        }
+        if (event.key === 'Escape') {
+            exitHowToPlay();
+        }
+
     }
 
     document.addEventListener('keydown', handleKeyDown);
@@ -504,6 +508,13 @@ window.addEventListener('load', () => {
     });
 
 });
+
+function exitHowToPlay() {
+    const howToPlayPopup = document.getElementById('how-to-play-popup');
+    howToPlayPopup.style.visibility = 'hidden';
+    howToPlayPopup.style.opacity = '0';
+}
+
 
 function toggleHowToPlay() {
     const howToPlayPopup = document.getElementById('how-to-play-popup');
