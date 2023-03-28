@@ -318,9 +318,18 @@ function updateHintsWidget() {
       const li = document.createElement('li');
       li.textContent = hint;
       li.classList.add('clickable-hint');
+      li.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await deleteHint(hint, 'meaning');
+      })
       li.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
         await deleteHint(hint, 'meaning');
+        const data = await makeWordIntoHint(hint, true);
+        // Do something with the hint, like displaying it
+        soundsLikeHints = data.soundsLikeHints;
+        meaningHints = data.meaningHints;
+        updateHintsWidget();
       });
       meaningHintsList.appendChild(li);
     });
@@ -330,6 +339,15 @@ function updateHintsWidget() {
       const li = document.createElement('li');
       li.textContent = hint;
       li.classList.add('clickable-hint');
+      li.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await deleteHint(hint, 'sounds_like');
+        const data = await makeWordIntoHint(hint, false);
+        // Do something with the hint, like displaying it
+        soundsLikeHints = data.soundsLikeHints;
+        meaningHints = data.meaningHints;
+        updateHintsWidget();
+      })
       li.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
         await deleteHint(hint, 'sounds_like');
