@@ -195,7 +195,7 @@ function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
 }
 
 function handleClick(e) {
-    e.preventDefault();
+    e.preventDefault(); 
 
     const answer = e.button === 0 ? 'yes' : 'no';
     const question = e.target.textContent;
@@ -220,6 +220,10 @@ function rootsReminder() {
     askQuestion('', 'roots_reminder');
 }
 
+function removeHint() {
+    mousedOver && mousedOver.remove()
+}
+
 
 function processQuestion(question) {
     const bubble = document.createElement('div');
@@ -227,6 +231,9 @@ function processQuestion(question) {
     bubble.textContent = question;
     bubble.addEventListener('click', handleClick);
     bubble.addEventListener('contextmenu', handleClick);
+
+    bubble.addEventListener('mouseenter', () => { mousedOver = bubble });
+    bubble.addEventListener('mouseleave', () => { mousedOver = null});
     questionArea.appendChild(bubble);
 
     fadeOutAndRemove(bubble, 30000);    
@@ -311,9 +318,18 @@ function updateHintsWidget() {
       const li = document.createElement('li');
       li.textContent = hint;
       li.classList.add('clickable-hint');
+      li.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await deleteHint(hint, 'meaning');
+      })
       li.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
         await deleteHint(hint, 'meaning');
+        const data = await makeWordIntoHint(hint, true);
+        // Do something with the hint, like displaying it
+        soundsLikeHints = data.soundsLikeHints;
+        meaningHints = data.meaningHints;
+        updateHintsWidget();
       });
       meaningHintsList.appendChild(li);
     });
@@ -323,6 +339,15 @@ function updateHintsWidget() {
       const li = document.createElement('li');
       li.textContent = hint;
       li.classList.add('clickable-hint');
+      li.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await deleteHint(hint, 'sounds_like');
+        const data = await makeWordIntoHint(hint, false);
+        // Do something with the hint, like displaying it
+        soundsLikeHints = data.soundsLikeHints;
+        meaningHints = data.meaningHints;
+        updateHintsWidget();
+      })
       li.addEventListener('contextmenu', async (e) => {
         e.preventDefault();
         await deleteHint(hint, 'sounds_like');
@@ -430,6 +455,7 @@ async function moveToGarbage(hint, hintType) {
 window.addEventListener('load', () => {
     startNewGame();
     askQuestion();
+    mousedOver = null;
 });
 
 
@@ -448,6 +474,9 @@ window.addEventListener('load', () => {
         }
         if (event.key === 'r') {
             await rootsReminder();
+        }
+        if (event.key === 'd') {
+            removeHint();
         }        
     }
 
@@ -470,7 +499,7 @@ window.addEventListener('load', () => {
     });
 
     inputField.addEventListener('blur', () => {
-    // Add the keydown listener back to the document when the input field is blurred
+    // Add the keydown listener back to the document when the input field is blurred 
     document.addEventListener('keydown', handleKeyDown);
     });
 
