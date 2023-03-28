@@ -194,8 +194,16 @@ function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     document.body.appendChild(victoryMessage);
 }
 
-function handleClick(e) {
+function handleDeleteHint(e, mousedOver) {
     e.preventDefault();
+
+    if (e.key === 'd' && mousedOver) {
+        e.target.remove();
+    }
+}
+
+function handleClick(e) {
+    e.preventDefault(); 
 
     const answer = e.button === 0 ? 'yes' : 'no';
     const question = e.target.textContent;
@@ -227,6 +235,11 @@ function processQuestion(question) {
     bubble.textContent = question;
     bubble.addEventListener('click', handleClick);
     bubble.addEventListener('contextmenu', handleClick);
+    
+    let mousedOver = false;
+    bubble.addEventListener('mouseenter', () => { mousedOver = true });
+    bubble.addEventListener('mouseleave', () => { mousedOver = false });
+    bubble.addEventListener('keypress', (e) => handleDeleteHint(e, mousedOver));
     questionArea.appendChild(bubble);
 
     fadeOutAndRemove(bubble, 30000);    
