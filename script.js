@@ -266,7 +266,7 @@ async function startOver() {
 
 async function startNewGame() {
     try {
-        const goalWordDisplay = document.getElementById('new-world-text-field');
+        const goalWordDisplay = document.getElementById('new-word-text-field');
         console.log(goalWordDisplay)
         const newGoalWord = goalWordDisplay?.value;
         const body = JSON.stringify({ goalWord: newGoalWord })
@@ -494,7 +494,7 @@ window.addEventListener('load', () => {
         await startOver();
     });    
 
-    const inputField = document.getElementById('new-world-text-field');
+    const inputField = document.getElementById('new-word-text-field');
 
     // Add focus and blur event listeners to the input field
     inputField.addEventListener('focus', () => {
