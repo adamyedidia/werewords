@@ -194,14 +194,6 @@ function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     document.body.appendChild(victoryMessage);
 }
 
-function handleDeleteHint(e, mousedOver) {
-    e.preventDefault();
-
-    if (e.key === 'd' && mousedOver) {
-        e.target.remove();
-    }
-}
-
 function handleClick(e) {
     e.preventDefault(); 
 
@@ -228,6 +220,10 @@ function rootsReminder() {
     askQuestion('', 'roots_reminder');
 }
 
+function removeHint() {
+    mousedOver && mousedOver.remove()
+}
+
 
 function processQuestion(question) {
     const bubble = document.createElement('div');
@@ -235,11 +231,9 @@ function processQuestion(question) {
     bubble.textContent = question;
     bubble.addEventListener('click', handleClick);
     bubble.addEventListener('contextmenu', handleClick);
-    
-    let mousedOver = false;
-    bubble.addEventListener('mouseenter', () => { mousedOver = true });
-    bubble.addEventListener('mouseleave', () => { mousedOver = false });
-    bubble.addEventListener('keypress', (e) => handleDeleteHint(e, mousedOver));
+
+    bubble.addEventListener('mouseenter', () => { mousedOver = bubble });
+    bubble.addEventListener('mouseleave', () => { mousedOver = null});
     questionArea.appendChild(bubble);
 
     fadeOutAndRemove(bubble, 30000);    
@@ -443,6 +437,7 @@ async function moveToGarbage(hint, hintType) {
 window.addEventListener('load', () => {
     startNewGame();
     askQuestion();
+    mousedOver = null;
 });
 
 
@@ -461,6 +456,9 @@ window.addEventListener('load', () => {
         }
         if (event.key === 'r') {
             await rootsReminder();
+        }
+        if (event.key === 'd') {
+            removeHint();
         }        
     }
 
@@ -483,7 +481,7 @@ window.addEventListener('load', () => {
     });
 
     inputField.addEventListener('blur', () => {
-    // Add the keydown listener back to the document when the input field is blurred
+    // Add the keydown listener back to the document when the input field is blurred 
     document.addEventListener('keydown', handleKeyDown);
     });
 
