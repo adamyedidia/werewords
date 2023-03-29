@@ -284,8 +284,9 @@ async function startNewGame() {
     try {
         const goalWordDisplay = document.getElementById('new-word-text-field');
         const newGoalWord = goalWordDisplay?.value;
-        const body = JSON.stringify({ goalWord: newGoalWord })
-        console.log(newGoalWord)
+        const goalWordTypeDisplay = document.getElementById('new-word-type');
+        const newGoalWordType = goalWordTypeDisplay?.value ;
+        const body = JSON.stringify({ goalWord: newGoalWord , goalWordType: newGoalWordType === 'category' ? null : newGoalWordType })
         const requestOptions = {
             method: 'POST',
             mode: 'cors',
@@ -547,7 +548,6 @@ function exitHowToPlay() {
 
 function toggleHowToPlay() {
     const howToPlayPopup = document.getElementById('how-to-play-popup');
-    console.log(howToPlayPopup);
     if (howToPlayPopup.style.visibility === 'hidden') {
       howToPlayPopup.style.visibility = 'visible';
       howToPlayPopup.style.opacity = '1';
