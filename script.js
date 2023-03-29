@@ -1,6 +1,7 @@
+const startingQuestions = ['Is it a noun?', 'Is it a verb?', 'Is it an adjective?'];
 const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
-let questions = ['Is it a noun?'];
+let questions = [...startingQuestions];
 questions.forEach(processQuestion)
 
 // URL = 'http://127.0.0.1:5001'
@@ -182,16 +183,31 @@ function formatTimeDelta(seconds) {
 
 function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     const victoryMessage = document.createElement('div');
+    const refreshMessage = document.createElement('div');
     victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${formatTimeDelta(victoryTime)}</strong>. You won when ChatGPT asked: ${winningQuestion} `;
+    refreshMessage.innerHTML = `(n to restart)`;
     victoryMessage.style.fontSize = '2em';
     victoryMessage.style.textAlign = 'center';
     victoryMessage.style.marginTop = '2em';
+    refreshMessage.style.fontSize = '2em';
+    refreshMessage.style.textAlign = 'center';
+    refreshMessage.style.marginTop = '2em';
+
 
     // Clear the current content
     document.body.innerHTML = '';
 
+    const handleKeyDownOnVictoryPage = async (e) => {
+        if (e.key === 'n') {
+            location.reload();
+        }
+    }
+
+    document.body.addEventListener('keydown', handleKeyDownOnVictoryPage);
+
     // Add the victory message to the body
     document.body.appendChild(victoryMessage);
+    document.body.appendChild(refreshMessage);
 }
 
 function handleClick(e) {
@@ -255,7 +271,7 @@ async function askQuestion(question, answer) {
 function clearQuestions() {
     questionArea.innerHTML = '';
     messages.innerHTML = '';
-    questions = ['Is it a noun?'];
+    questions = [...startingQuestions];
     questions.forEach(processQuestion)
 }
 
@@ -267,7 +283,6 @@ async function startOver() {
 async function startNewGame() {
     try {
         const goalWordDisplay = document.getElementById('new-word-text-field');
-        console.log(goalWordDisplay)
         const newGoalWord = goalWordDisplay?.value;
         const body = JSON.stringify({ goalWord: newGoalWord })
         console.log(newGoalWord)
@@ -282,12 +297,13 @@ async function startNewGame() {
         startTime = data.gameStartTime * 1000;
         goalWord = data.goalWord;
         gameId = data.gameId;
+        goalWordDisplay.value = null;
         // const goalWordDisplay = document.getElementById('goal-word-display');
         // goalWordDisplay.textContent = `The word is ${goalWord}`;
       } catch (error) {
         console.error('Error:', error);
       }
-    
+      
       startOver();
       meaningHints = [];
       soundsLikeHints = [];
@@ -298,7 +314,7 @@ async function startNewGame() {
 
       if (goalWord) {
         const goalWordDisplay = document.getElementById('goal-word-display');
-        goalWordDisplay.textContent = `The goal word is ${goalWord}`;
+        goalWordDisplay.textContent = `The goal word is ${goalWord}`; 
         startTimer();
       }
 
@@ -452,16 +468,10 @@ async function moveToGarbage(hint, hintType) {
     updateGarbageWidget();
 }
 
-window.addEventListener('load', () => {
+function onLoad () {
     startNewGame();
-    askQuestion();
     mousedOver = null;
-});
-
-
-window.addEventListener('load', () => {
-    // startOver();
-
+   
     const handleKeyDown = async (event) => {
         if (event.key === 's') {
             await startOver();
@@ -477,6 +487,10 @@ window.addEventListener('load', () => {
         }
         if (event.key === 'd') {
             removeHint();
+        }
+        if (event.key === 'f') {
+            event.preventDefault();
+            inputField.focus();
         }
         if (event.key === 'Escape') {
             exitHowToPlay();
@@ -496,6 +510,15 @@ window.addEventListener('load', () => {
 
     const inputField = document.getElementById('new-word-text-field');
 
+    inputField.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            await startNewGame();
+        }
+        if (e.key === 'Escape') {
+            inputField.blur();
+        }
+    })
+
     // Add focus and blur event listeners to the input field
     inputField.addEventListener('focus', () => {
     // Remove the keydown listener from the document when the input field is focused
@@ -507,10 +530,16 @@ window.addEventListener('load', () => {
     document.addEventListener('keydown', handleKeyDown);
     });
 
-});
+};
+
+window.addEventListener('load', onLoad);
 
 function exitHowToPlay() {
     const howToPlayPopup = document.getElementById('how-to-play-popup');
+    // Without this, you hit escape on the victory screen it gets mad
+    if (!howToPlayPopup) {
+        return
+    }
     howToPlayPopup.style.visibility = 'hidden';
     howToPlayPopup.style.opacity = '0';
 }
