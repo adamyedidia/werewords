@@ -152,6 +152,16 @@ async function getNewQuestions(newQuestion, answer) {
 
     const response = await fetch(`${URL}/questions`, requestOptions);
     const data = await response.json();
+    const reason = data.reason;
+
+    if (reason === 'Wrong password') {
+        localStorage.setItem('password', '');
+        if (!localStorage.getItem('alerted')) {
+            localStorage.setItem('alerted','true');
+            alert('password was rejected by the server');
+        }
+        window.location.href = 'index.html';
+    }
 
     if (data.victory) {
         displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
