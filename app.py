@@ -106,7 +106,10 @@ def process_user_reply(user_reply: UserReply, sounds_like_hints: Optional[list[s
                 return "Try guessing my word now!"
             
     elif user_reply == UserReply.ROOTS_REMINDER:
-        return f"Try listing the first ten words you think of that are a different form of the following words: {', '.join([*(meaning_hints or []), *(sounds_like_hints or [])])}"
+        return (
+            f"Try listing the first ten words you think of that share a lemma with at least one of the following words: {', '.join([*(meaning_hints or []), *(sounds_like_hints or [])])}"
+            f"For example, colorful shares a lemma with color"
+        )
     else:
         raise Exception(f"Invalid user reply {user_reply}")
 
