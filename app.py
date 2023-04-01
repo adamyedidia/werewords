@@ -14,6 +14,7 @@ import time
 import re
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
+from functools import wraps
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -60,6 +61,19 @@ students = [
     {'id': 2, 'name': 'Bob', 'age': 23},
     {'id': 3, 'name': 'Charlie', 'age': 20}
 ]
+
+def api_endpoint(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            headers = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
+            return ('', 204, headers)
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route("/")
 def index():
@@ -121,15 +135,8 @@ def add_cors_headers(response):
 
 
 @app.route('/new_game', methods=['POST', 'OPTIONS'])
+@api_endpoint
 def start_new_game():
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)
-
     if request.json: 
         goal_word = request.json.get('goalWord')
         if not goal_word:
@@ -164,15 +171,9 @@ def start_new_game():
 
 
 @app.route("/hints", methods=['DELETE', 'OPTIONS'])
+@api_endpoint
 def delete_hint():
     openai.api_key = OPENAI_SECRET_KEY
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)
     
     hint = request.json.get('hint')
     hint_type = request.json.get('hintType')
@@ -199,15 +200,9 @@ def delete_hint():
 
 
 @app.route("/hints", methods=['POST', 'OPTIONS'])
+@api_endpoint
 def make_word_into_hint():
     openai.api_key = OPENAI_SECRET_KEY
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)
     
     hint = request.json.get('hint')
     hint_type = request.json.get('hintType')
@@ -236,19 +231,10 @@ def make_word_into_hint():
 
 
 @app.route("/questions", methods=['POST', 'OPTIONS'])
+@api_endpoint
 def get_response():
     # set your API key
     openai.api_key = OPENAI_SECRET_KEY
-
-    
-    # logger.warning('hello')
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)  
     
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
