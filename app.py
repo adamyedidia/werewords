@@ -234,25 +234,18 @@ def _get_response_inner(messages: list, game_id: str) -> str:
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
     
-    print(messages)
-
     messages_for_openai = [
                 {"role": "system", "content": "You are a player in a fun game."},
                 {"role": "user", "content": (
                         "Let's play a game. The game is like twenty questions, " 
                         "except that there is no limit on the number of questions asked, "
                         "and the word you're trying to guess is going to be tougher than an ordinary twenty "
-                        "questions word. If your questions don't "
-                        "seem to be making any progress, try asking about a broader class of things. I'll think of a word, "
-                        "and you try to find the word using only questions which I will answer only with \"yes\", \"no\", "
-                        "\"maybe\", or a reminder to try asking broader questions. Sometimes, I will tell you other words " 
-                        "that hint at my word, or remind you of those words. The hints might sound like my word, or they might be related "
-                        "to my word via their meaning. Sound good?" 
+                        "questions word."
                     )
                 },
                 {"role": "assistant", "content": "Sounds fun! Let's play. Have you thought of a word?"},
                 {"role": "user", "content": f"Yes, please go ahead and start! Please ask me a question about my word!"},
-                *[message[1] for message in messages],
+                *[message[1] for message in messages[-16:]],
             ]
     
     response = openai.ChatCompletion.create(
