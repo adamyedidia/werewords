@@ -8,7 +8,7 @@ from typing import Optional, Any
 import threading
 import json
 from enum import Enum
-from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK
+from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK, VERY_HARD_WORDS
 import random
 import time
 import re
@@ -36,6 +36,7 @@ class GoalWordType(Enum):
     MEDIUM = 'medium'
     HARD = 'hard'
     HARD_MATH = 'hard math'
+    VERY_HARD = 'very hard'
     HOWITZER = 'howitzer'
     TULLE = 'tulle'
     US = 'us'
@@ -46,6 +47,7 @@ word_type_to_words_list = {
     GoalWordType.MEDIUM: DEFAULT_WORDS,
     GoalWordType.HARD: HARD_PDT_WORDS,
     GoalWordType.HARD_MATH: HARD_MATH_WORDS,
+    GoalWordType.VERY_HARD: VERY_HARD_WORDS,
     GoalWordType.HOWITZER: HOWITZER,
     GoalWordType.TULLE: TULLE,
     GoalWordType.US: US,
