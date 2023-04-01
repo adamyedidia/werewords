@@ -8,9 +8,10 @@ from typing import Optional, Any
 import threading
 import json
 from enum import Enum
-from words import WORDS
+from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK
 import random
 import time
+import re
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
 
@@ -30,6 +31,26 @@ class HintType(Enum):
     SOUNDS_LIKE = 'sounds_like'
     MEANING = 'meaning'
 
+class GoalWordType(Enum):
+    EASY = 'easy'
+    MEDIUM = 'medium'
+    HARD = 'hard'
+    HARD_MATH = 'hard math'
+    HOWITZER = 'howitzer'
+    TULLE = 'tulle'
+    US = 'us'
+    UK = 'uk'
+
+word_type_to_words_list = {
+    GoalWordType.EASY: EASY_PDT_WORDS,
+    GoalWordType.MEDIUM: DEFAULT_WORDS,
+    GoalWordType.HARD: HARD_PDT_WORDS,
+    GoalWordType.HARD_MATH: HARD_MATH_WORDS,
+    GoalWordType.HOWITZER: HOWITZER,
+    GoalWordType.TULLE: TULLE,
+    GoalWordType.US: US,
+    GoalWordType.UK: UK 
+}
 
 # Define some example data for the API
 students = [
@@ -49,7 +70,7 @@ def create_app():
 def _process_response(raw_resp: dict[str, Any]) -> Any:
     resp = jsonify(raw_resp)
     resp.headers['Access-Control-Allow-Origin'] = '*'
-    print(resp.headers)
+    # print(resp.headers)
     return add_cors_headers(resp)
 
 
@@ -110,10 +131,19 @@ def start_new_game():
     if request.json: 
         goal_word = request.json.get('goalWord')
         if not goal_word:
-            goal_word = random.choice(WORDS)
+            goal_words = DEFAULT_WORDS
+            goal_word_type = request.json.get('goalWordType')
+            try: 
+                goal_word_type = GoalWordType(goal_word_type)
+            except:
+                print('Invalid goal word type, using default')
+            if goal_word_type in word_type_to_words_list:
+                goal_words = word_type_to_words_list[goal_word_type]
+            goal_word = random.choice(goal_words)
     else:
-        goal_word = random.choice(WORDS)
+        goal_word = random.choice(DEFAULT_WORDS)
 
+    goal_word = goal_word.lower()
     game_start_time = time.time()
 
     game_id = token_hex(40)
@@ -295,14 +325,20 @@ def get_response():
     victory_time = None
     winning_question = None
 
+    characters_to_strip = ['?', '.', ',', '!', '"', "'", ':']
+
+    def strip_characters(s):
+        for char in characters_to_strip:
+            s = s.replace(char, '')
+        return s.lower()
+    
     for question in new_questions:
-        for word in question.split():       
-            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').replace(':', '').strip().lower() == goal_word:
-                victory = True
-                game_start_time = rget('game_start_time', game_id=game_id)
-                if game_start_time is not None:
-                    victory_time = time.time() - float(game_start_time)
-                    winning_question = question
+        if re.search(r'\b{}\b'.format(strip_characters(goal_word)), strip_characters(question)):
+            victory = True
+            game_start_time = rget('game_start_time', game_id=game_id)
+            if game_start_time is not None:
+                victory_time = time.time() - float(game_start_time)
+                winning_question = question
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
 
