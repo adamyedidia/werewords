@@ -8,7 +8,7 @@ from typing import Optional, Any
 import threading
 import json
 from enum import Enum
-from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS
+from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK
 import random
 import time
 import re
@@ -36,12 +36,20 @@ class GoalWordType(Enum):
     MEDIUM = 'medium'
     HARD = 'hard'
     HARD_MATH = 'hard math'
+    HOWITZER = 'howitzer'
+    TULLE = 'tulle'
+    US = 'us'
+    UK = 'uk'
 
 word_type_to_words_list = {
     GoalWordType.EASY: EASY_PDT_WORDS,
     GoalWordType.MEDIUM: DEFAULT_WORDS,
     GoalWordType.HARD: HARD_PDT_WORDS,
-    GoalWordType.HARD_MATH: HARD_MATH_WORDS
+    GoalWordType.HARD_MATH: HARD_MATH_WORDS,
+    GoalWordType.HOWITZER: HOWITZER,
+    GoalWordType.TULLE: TULLE,
+    GoalWordType.US: US,
+    GoalWordType.UK: UK 
 }
 
 # Define some example data for the API
@@ -130,7 +138,6 @@ def start_new_game():
             except:
                 print('Invalid goal word type, using default')
             if goal_word_type in word_type_to_words_list:
-                print('hello there')
                 goal_words = word_type_to_words_list[goal_word_type]
             goal_word = random.choice(goal_words)
     else:

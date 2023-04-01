@@ -1243,4 +1243,86 @@ MEDIUM_WORDS = [
     "enthusiasm" 
 ]
 
+HOWITZER = [
+    "howitzer",
+    "azimuth",
+    "aileron",
+    "servo",
+    "boson",
+    "checksum",
+    "gauss",
+    "katana",
+    "neodymium",
+    "yakuza",
+    "strafe",
+    "parsec",
+    "bushido"
+]
+
+TULLE = [
+    "peplum",
+    "tulle",
+    "chignon",
+    "bandeau",
+    "freesia",
+    "chenille",
+    "kohl",
+    "verbena",
+    "doula",
+    "ruche",
+    "espadrille",
+    "damask",
+    "jacquard",
+    "whipstich",
+    "boucle",
+    "taffeta",
+    "sateen",
+    "chambray",
+    "voile"
+]
+
+US = [
+    "manicotti",
+    "ziti",
+    "tilapia",
+    "garbanzo",
+    "kabob",
+    "kwanza",
+    "crawdad",
+    "hibachi",
+    "sandlot",
+    "acetaminophen",
+    "tamale",
+    "kielbasa",
+    "conniption",
+    "tomatillo",
+    "provolone",
+    "albuterol",
+    "staph",
+    "goober",
+    "luau"
+]
+
+UK = [
+    "tippex",
+    "biro",
+    "tombola",
+    "chipolata",
+    "dodgem",
+    "yob",
+    "gazump",
+    "abseil",
+    "naff",
+    "plaice",
+    "judder",
+    "chiropody",
+    "korma",
+    "bolshy",
+    "quango",
+    "pelmet",
+    "brolly",
+    "chaffinch",
+    "escalope"
+]
+
 DEFAULT_WORDS = MEDIUM_WORDS
