@@ -317,14 +317,20 @@ def get_response():
     victory_time = None
     winning_question = None
 
+    characters_to_strip = ['?', '.', ',', '!', '"', "'", ':']
+
+    def strip_characters(s):
+        for char in characters_to_strip:
+            s = s.replace(char, '')
+        return s
+
     for question in new_questions:
-        for word in question.split():       
-            if word.replace('?', '').replace('.', '').replace(',', '').replace('!', '').replace('"', '').replace("'", '').replace(':', '').strip().lower() == goal_word:
-                victory = True
-                game_start_time = rget('game_start_time', game_id=game_id)
-                if game_start_time is not None:
-                    victory_time = time.time() - float(game_start_time)
-                    winning_question = question
+        if strip_characters(goal_word) in strip_characters(question):
+            victory = True
+            game_start_time = rget('game_start_time', game_id=game_id)
+            if game_start_time is not None:
+                victory_time = time.time() - float(game_start_time)
+                winning_question = question
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
 
