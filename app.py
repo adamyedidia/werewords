@@ -322,7 +322,7 @@ def get_response():
     def strip_characters(s):
         for char in characters_to_strip:
             s = s.replace(char, '')
-        return s
+        return s.lower()
 
     for question in new_questions:
         if strip_characters(goal_word) in strip_characters(question):
