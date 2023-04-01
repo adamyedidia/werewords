@@ -230,56 +230,13 @@ def make_word_into_hint():
     })
 
 
-@app.route("/questions", methods=['POST', 'OPTIONS'])
-@api_endpoint
-def get_response():
-    # set your API key
-    openai.api_key = OPENAI_SECRET_KEY
-    
+def _get_response_inner(messages: list, game_id: str) -> str:
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
+    
+    print(messages)
 
-    # set the endpoint URL
-    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
-
-    new_question = request.json.get('newQuestion')
-    raw_user_reply = request.json.get('userReply')
-    game_id = request.json.get('gameId')
-
-    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
-    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
-
-
-    sounds_like_hints_initial_str = (
-        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
-        if sounds_like_hints else ''
-    )
-    meaning_hints_initial_str = (
-        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
-        if meaning_hints else ''
-    )
-
-    if new_question is None or raw_user_reply is None:
-        # Start over command
-        rset('messages', '[]', game_id=game_id)
-        messages = []
-    else:
-        try:
-            user_reply = UserReply(raw_user_reply)
-        except ValueError:
-            return _process_response(_failure_response(f'Invalid user reply {raw_user_reply}'))        
-        messages = json.loads(rget('messages', game_id=game_id) or '[]')
-        messages.append({"role": "assistant", "content": new_question})
-        messages.append({"role": "user", "content": process_user_reply(user_reply, sounds_like_hints, meaning_hints)})    
-        rset('messages', json.dumps(messages), game_id=game_id)    
-
-    if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
-        return _process_response(_failure_response('Input too long'))
-
-    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
-
-
-    messages = [
+    messages_for_openai = [
                 {"role": "system", "content": "You are a player in a fun game."},
                 {"role": "user", "content": (
                         "Let's play a game. The game is like twenty questions, " 
@@ -295,12 +252,12 @@ def get_response():
                 },
                 {"role": "assistant", "content": "Sounds fun! Let's play. Have you thought of a word?"},
                 {"role": "user", "content": f"Yes, please go ahead and start! Please ask me a question about my word!"},
-                *messages,
+                *[message[1] for message in messages],
             ]
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=messages,
+        messages=messages_for_openai,
         temperature=1.0,
         n=3,
     )
@@ -329,6 +286,96 @@ def get_response():
                 winning_question = question
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
+
+
+@app.route("/questions", methods=['POST', 'OPTIONS'])
+@api_endpoint
+def get_response():
+    # set your API key
+    openai.api_key = OPENAI_SECRET_KEY
+
+    # set the endpoint URL
+    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
+
+    new_question = request.json.get('newQuestion')
+    raw_user_reply = request.json.get('userReply')
+    game_id = request.json.get('gameId')
+    question_answer_pair_id = request.json.get('questionAnswerPairId')
+
+    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
+    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
+
+
+    sounds_like_hints_initial_str = (
+        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
+        if sounds_like_hints else ''
+    )
+    meaning_hints_initial_str = (
+        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
+        if meaning_hints else ''
+    )
+
+    if new_question is None or raw_user_reply is None:
+        # Start over command
+        rset('messages', '[]', game_id=game_id)
+        messages = []
+    else:
+        try:
+            user_reply = UserReply(raw_user_reply)
+        except ValueError:
+            return _process_response(_failure_response(f'Invalid user reply {raw_user_reply}'))        
+        messages = json.loads(rget('messages', game_id=game_id) or '[]')
+        messages.append([question_answer_pair_id, {"role": "assistant", "content": new_question}])
+        messages.append([question_answer_pair_id, {"role": "user", "content": process_user_reply(user_reply, sounds_like_hints, meaning_hints)}])
+        rset('messages', json.dumps(messages), game_id=game_id)    
+
+    if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
+        return _process_response(_failure_response('Input too long'))
+
+    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
+
+    return _get_response_inner(messages, game_id)
+
+
+@app.route("/questions", methods=['DELETE', 'OPTIONS'])
+@api_endpoint
+def delete_question():
+    # set your API key
+    openai.api_key = OPENAI_SECRET_KEY
+
+    # set the endpoint URL
+    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
+
+    new_question = request.json.get('newQuestion')
+    raw_user_reply = request.json.get('userReply')
+    game_id = request.json.get('gameId')
+    question_answer_pair_id = request.json.get('questionAnswerPairId')
+    
+    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
+    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
+
+
+    sounds_like_hints_initial_str = (
+        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
+        if sounds_like_hints else ''
+    )
+    meaning_hints_initial_str = (
+        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
+        if meaning_hints else ''
+    )
+
+    messages = json.loads(rget('messages', game_id=game_id) or '[]')
+    print(f'messages before: {messages}')
+    messages = [message for message in messages if message[0] != question_answer_pair_id]
+    print(f'messages after: {messages}')
+    rset('messages', json.dumps(messages), game_id=game_id)
+
+    if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
+        return _process_response(_failure_response('Input too long'))
+
+    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
+
+    return _get_response_inner(messages, game_id)
 
 
 # Start the server

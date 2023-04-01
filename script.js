@@ -13,6 +13,7 @@ let startTime = null;
 let timerInterval = null;
 let garbageHints = [];
 let gameId = null;
+let messageMousedOver = null;
 
 function updateTimerDisplay() {
     const timerDisplay = document.getElementById('timer-display');
@@ -30,12 +31,15 @@ function startTimer() {
     timerInterval = setInterval(updateTimerDisplay, 1000);
 }
 
-function addMessage(message, isQuestion) {
+function addMessage(message, isQuestion, questionAnswerPairId) {
     const li = document.createElement('li');
     li.classList.add('speech-bubble');
     if (isQuestion) {
         li.classList.add('question-bubble');
     }
+
+    // Set the questionAnswerPairId as a data attribute
+    li.setAttribute('data-question-answer-pair-id', questionAnswerPairId);
 
     // Split the message into words and create clickable elements
     const words = message.replace(/\s+/g, ' ').split(' ');
@@ -69,7 +73,10 @@ function addMessage(message, isQuestion) {
         }
     });
 
-    messages.appendChild(li);
+    li.addEventListener('mouseenter', () => { messageMousedOver = li });
+    li.addEventListener('mouseleave', () => { messageMousedOver = null });
+
+    messages.appendChild(li);    
 }
 
 function fadeOutAndRemove(element, delay) {
@@ -139,12 +146,18 @@ setTimeout(() => {
 }, 10000); // start fading out after 5 seconds
 }
 
-async function getNewQuestions(newQuestion, answer) {
+async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
     const requestOptions = {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newQuestion: newQuestion, userReply: answer, password: localStorage.getItem('password'), gameId }),
+        body: JSON.stringify({ 
+            newQuestion: newQuestion, 
+            userReply: answer, 
+            password: localStorage.getItem('password'), 
+            gameId, 
+            questionAnswerPairId,
+        }),
     };
 
     console.log("Sending request to /questions", requestOptions);
@@ -219,30 +232,54 @@ function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     document.body.appendChild(refreshMessage);
 }
 
+function generateRandomURLSafeString(bits) {
+    const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    const charsInUrlSafeString = Math.ceil(bits / 6);
+    let randomString = '';
+  
+    for (let i = 0; i < charsInUrlSafeString; i++) {
+      const randomIndex = Math.floor(Math.random() * urlSafeChars.length);
+      randomString += urlSafeChars.charAt(randomIndex);
+    }
+  
+    return randomString;
+}
+
+function generateQuestionAnswerPairId() {
+    return generateRandomURLSafeString(100);
+}
+
 function handleClick(e) {
     e.preventDefault(); 
 
     const answer = e.button === 0 ? 'yes' : 'no';
     const question = e.target.textContent;
-    addMessage(`Q: ${question}`, true);
-    addMessage(`A: ${answer}`, false);
+
+    const questionAnswerPairId = generateQuestionAnswerPairId();
+
+    addMessage(`Q: ${question}`, true, questionAnswerPairId);
+    addMessage(`A: ${answer}`, false, questionAnswerPairId);
 
     e.target.remove();
-    askQuestion(question, answer);
+    askQuestion(question, answer, questionAnswerPairId);
 }
 
 function hintReminder() {
-    addMessage(`Q: I'm a bit stuck. What should I do?`, true);
-    addMessage(`A: Remember your hints. Try guessing my word!`, false);
+    const questionAnswerPairId = generateQuestionAnswerPairId();
 
-    askQuestion('', 'hints_reminder');
+    addMessage(`Q: I'm a bit stuck. What should I do?`, true, questionAnswerPairId);
+    addMessage(`A: Remember your hints. Try guessing my word!`, false, questionAnswerPairId);
+
+    askQuestion('', 'hints_reminder', questionAnswerPairId);
 }
 
 function rootsReminder() {
-    addMessage(`Q: I'm a bit stuck. What should I do?`, true);
-    addMessage(`A: Try guessing a word that shares a root with a word in the list of hints`, false);
+    const questionAnswerPairId = generateQuestionAnswerPairId();
 
-    askQuestion('', 'roots_reminder');
+    addMessage(`Q: I'm a bit stuck. What should I do?`, true, questionAnswerPairId);
+    addMessage(`A: Try guessing a word that shares a root with a word in the list of hints`, false, questionAnswerPairId);
+
+    askQuestion('', 'roots_reminder', questionAnswerPairId);
 }
 
 function removeHint() {
@@ -265,16 +302,49 @@ function processQuestion(question) {
 }
 
 
-async function askQuestion(question, answer) {
+async function askQuestion(question, answer, questionAnswerPairId) {
     try {
         const newQuestion = answer === 'hints_reminder' || answer === 'roots_reminder' ? "I'm a bit stuck. What should I do?" : question;
-        const newQuestionsFromServer = await getNewQuestions(newQuestion, answer);
+        const newQuestionsFromServer = await getNewQuestions(newQuestion, answer, questionAnswerPairId);
         questions.push(...newQuestionsFromServer);
 
         newQuestionsFromServer.forEach(processQuestion);
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+async function deleteQuestion(questionAnswerPairId) {
+    const requestOptions = {
+        method: 'DELETE',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            questionAnswerPairId,
+            password: localStorage.getItem('password'),
+            gameId,
+        }),
+    };
+
+    const response = await fetch(`${URL}/questions`, requestOptions);
+
+    const data = await response.json();
+    const reason = data.reason;
+
+    if (reason === 'Wrong password') {
+        localStorage.setItem('password', '');
+        if (!localStorage.getItem('alerted')) {
+            localStorage.setItem('alerted','true');
+            alert('password was rejected by the server');
+        }
+        window.location.href = 'index.html';
+    }
+
+    if (data.victory) {
+        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+    } else {
+        return data.questions;
+    }    
 }
 
 function clearQuestions() {
@@ -496,7 +566,27 @@ function onLoad () {
             await rootsReminder();
         }
         if (event.key === 'd') {
-            removeHint();
+            console.log(messageMousedOver);
+            console.log(messages);
+            
+            if (messageMousedOver) {
+                const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
+                const newQuestionsFromServer = await deleteQuestion(questionAnswerPairId);
+
+                questions.push(...newQuestionsFromServer);
+                newQuestionsFromServer.forEach(processQuestion);
+
+                for (let i = messages.children.length - 1; i >= 0; i--) {
+                    const otherQuestionAnswerPairId = messages.children[i].getAttribute('data-question-answer-pair-id');
+                                
+                    if (questionAnswerPairId === otherQuestionAnswerPairId) {
+                        console.log(`deleting ${questionAnswerPairId}`);
+                        messages.children[i].remove();
+                    }
+                }    
+            } else {
+                removeHint();
+            }
         }
         if (event.key === 'f') {
             event.preventDefault();
