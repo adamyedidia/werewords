@@ -8,12 +8,13 @@ from typing import Optional, Any
 import threading
 import json
 from enum import Enum
-from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK
+from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK, VERY_HARD_WORDS
 import random
 import time
 import re
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
+from functools import wraps
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ class GoalWordType(Enum):
     MEDIUM = 'medium'
     HARD = 'hard'
     HARD_MATH = 'hard math'
+    VERY_HARD = 'very hard'
     HOWITZER = 'howitzer'
     TULLE = 'tulle'
     US = 'us'
@@ -46,6 +48,7 @@ word_type_to_words_list = {
     GoalWordType.MEDIUM: DEFAULT_WORDS,
     GoalWordType.HARD: HARD_PDT_WORDS,
     GoalWordType.HARD_MATH: HARD_MATH_WORDS,
+    GoalWordType.VERY_HARD: VERY_HARD_WORDS,
     GoalWordType.HOWITZER: HOWITZER,
     GoalWordType.TULLE: TULLE,
     GoalWordType.US: US,
@@ -58,6 +61,19 @@ students = [
     {'id': 2, 'name': 'Bob', 'age': 23},
     {'id': 3, 'name': 'Charlie', 'age': 20}
 ]
+
+def api_endpoint(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if request.method == 'OPTIONS':
+            headers = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
+            return ('', 204, headers)
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route("/")
 def index():
@@ -122,15 +138,8 @@ def add_cors_headers(response):
 
 
 @app.route('/new_game', methods=['POST', 'OPTIONS'])
+@api_endpoint
 def start_new_game():
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)
-
     if request.json: 
         goal_word = request.json.get('goalWord')
         if not goal_word:
@@ -165,15 +174,9 @@ def start_new_game():
 
 
 @app.route("/hints", methods=['DELETE', 'OPTIONS'])
+@api_endpoint
 def delete_hint():
     openai.api_key = OPENAI_SECRET_KEY
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)
     
     hint = request.json.get('hint')
     hint_type = request.json.get('hintType')
@@ -200,15 +203,9 @@ def delete_hint():
 
 
 @app.route("/hints", methods=['POST', 'OPTIONS'])
+@api_endpoint
 def make_word_into_hint():
     openai.api_key = OPENAI_SECRET_KEY
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)
     
     hint = request.json.get('hint')
     hint_type = request.json.get('hintType')
@@ -236,86 +233,27 @@ def make_word_into_hint():
     })
 
 
-@app.route("/questions", methods=['POST', 'OPTIONS'])
-def get_response():
-    # set your API key
-    openai.api_key = OPENAI_SECRET_KEY
-
-    
-    # logger.warning('hello')
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        }
-        return ('', 204, headers)  
-    
+def _get_response_inner(messages: list, game_id: str) -> str:
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
-
-    # set the endpoint URL
-    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
-
-    new_question = request.json.get('newQuestion')
-    raw_user_reply = request.json.get('userReply')
-    game_id = request.json.get('gameId')
-
-    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
-    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
-
-
-    sounds_like_hints_initial_str = (
-        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
-        if sounds_like_hints else ''
-    )
-    meaning_hints_initial_str = (
-        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
-        if meaning_hints else ''
-    )
-
-    if new_question is None or raw_user_reply is None:
-        # Start over command
-        rset('messages', '[]', game_id=game_id)
-        messages = []
-    else:
-        try:
-            user_reply = UserReply(raw_user_reply)
-        except ValueError:
-            return _process_response(_failure_response(f'Invalid user reply {raw_user_reply}'))        
-        messages = json.loads(rget('messages', game_id=game_id) or '[]')
-        messages.append({"role": "assistant", "content": new_question})
-        messages.append({"role": "user", "content": process_user_reply(user_reply, sounds_like_hints, meaning_hints)})    
-        rset('messages', json.dumps(messages), game_id=game_id)    
-
-    if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
-        return _process_response(_failure_response('Input too long'))
-
-    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
-
-
-    messages = [
+    
+    messages_for_openai = [
                 {"role": "system", "content": "You are a player in a fun game."},
                 {"role": "user", "content": (
                         "Let's play a game. The game is like twenty questions, " 
                         "except that there is no limit on the number of questions asked, "
                         "and the word you're trying to guess is going to be tougher than an ordinary twenty "
-                        "questions word. If your questions don't "
-                        "seem to be making any progress, try asking about a broader class of things. I'll think of a word, "
-                        "and you try to find the word using only questions which I will answer only with \"yes\", \"no\", "
-                        "\"maybe\", or a reminder to try asking broader questions. Sometimes, I will tell you other words " 
-                        "that hint at my word, or remind you of those words. The hints might sound like my word, or they might be related "
-                        "to my word via their meaning. Sound good?" 
+                        "questions word."
                     )
                 },
                 {"role": "assistant", "content": "Sounds fun! Let's play. Have you thought of a word?"},
                 {"role": "user", "content": f"Yes, please go ahead and start! Please ask me a question about my word!"},
-                *messages,
+                *[message[1] for message in messages[-16:]],
             ]
     
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=messages,
+        messages=messages_for_openai,
         temperature=1.0,
         n=3,
     )
@@ -344,6 +282,96 @@ def get_response():
                 winning_question = question
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
+
+
+@app.route("/questions", methods=['POST', 'OPTIONS'])
+@api_endpoint
+def get_response():
+    # set your API key
+    openai.api_key = OPENAI_SECRET_KEY
+
+    # set the endpoint URL
+    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
+
+    new_question = request.json.get('newQuestion')
+    raw_user_reply = request.json.get('userReply')
+    game_id = request.json.get('gameId')
+    question_answer_pair_id = request.json.get('questionAnswerPairId')
+
+    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
+    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
+
+
+    sounds_like_hints_initial_str = (
+        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
+        if sounds_like_hints else ''
+    )
+    meaning_hints_initial_str = (
+        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
+        if meaning_hints else ''
+    )
+
+    if new_question is None or raw_user_reply is None:
+        # Start over command
+        rset('messages', '[]', game_id=game_id)
+        messages = []
+    else:
+        try:
+            user_reply = UserReply(raw_user_reply)
+        except ValueError:
+            return _process_response(_failure_response(f'Invalid user reply {raw_user_reply}'))        
+        messages = json.loads(rget('messages', game_id=game_id) or '[]')
+        messages.append([question_answer_pair_id, {"role": "assistant", "content": new_question}])
+        messages.append([question_answer_pair_id, {"role": "user", "content": process_user_reply(user_reply, sounds_like_hints, meaning_hints)}])
+        rset('messages', json.dumps(messages), game_id=game_id)    
+
+    if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
+        return _process_response(_failure_response('Input too long'))
+
+    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
+
+    return _get_response_inner(messages, game_id)
+
+
+@app.route("/questions", methods=['DELETE', 'OPTIONS'])
+@api_endpoint
+def delete_question():
+    # set your API key
+    openai.api_key = OPENAI_SECRET_KEY
+
+    # set the endpoint URL
+    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
+
+    new_question = request.json.get('newQuestion')
+    raw_user_reply = request.json.get('userReply')
+    game_id = request.json.get('gameId')
+    question_answer_pair_id = request.json.get('questionAnswerPairId')
+    
+    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
+    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
+
+
+    sounds_like_hints_initial_str = (
+        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
+        if sounds_like_hints else ''
+    )
+    meaning_hints_initial_str = (
+        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
+        if meaning_hints else ''
+    )
+
+    messages = json.loads(rget('messages', game_id=game_id) or '[]')
+    print(f'messages before: {messages}')
+    messages = [message for message in messages if message[0] != question_answer_pair_id]
+    print(f'messages after: {messages}')
+    rset('messages', json.dumps(messages), game_id=game_id)
+
+    if len(raw_user_reply or '') > 1000 or len(new_question or '') > 1000:
+        return _process_response(_failure_response('Input too long'))
+
+    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
+
+    return _get_response_inner(messages, game_id)
 
 
 # Start the server
