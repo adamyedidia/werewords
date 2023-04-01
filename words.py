@@ -1240,7 +1240,7 @@ MEDIUM_WORDS = [
     "ridicule",
     "regime",
     "consultation",
-    "enthusiasm",        
+    "enthusiasm" 
 ]
 
 DEFAULT_WORDS = MEDIUM_WORDS
