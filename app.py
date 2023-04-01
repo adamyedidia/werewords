@@ -11,6 +11,7 @@ from enum import Enum
 from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS
 import random
 import time
+import re
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
 
@@ -323,9 +324,9 @@ def get_response():
         for char in characters_to_strip:
             s = s.replace(char, '')
         return s.lower()
-
+    
     for question in new_questions:
-        if strip_characters(goal_word) in strip_characters(question):
+        if re.search(r'\b{}\b'.format(strip_characters(goal_word)), strip_characters(question)):
             victory = True
             game_start_time = rget('game_start_time', game_id=game_id)
             if game_start_time is not None:
