@@ -4,6 +4,13 @@ const messages = document.getElementById('messages');
 let questions = [...startingQuestions];
 questions.forEach(processQuestion)
 
+let goalWordDefinition = "";
+const goalWordDisplay = document.getElementById('goal-word-display');
+
+goalWordDisplay.addEventListener('mouseenter', () => {
+    goalWordDisplay.title = goalWordDefinition;
+});
+
 const URL = CONFIG.URL;
 
 let soundsLikeHints = [];
@@ -326,7 +333,6 @@ async function deleteQuestion(questionAnswerPairId) {
         }),
     };
 
-    console.log(requestOptions.body);
     const response = await fetch(`${URL}/questions`, requestOptions);
     const data = await response.json();
     const reason = data.reason;
@@ -375,10 +381,22 @@ async function startOver() {
     await getNewQuestions(null, null);
 }
 
+async function getGoalWordDefinition(goalWord) {
+    const body = JSON.stringify({ word: goalWord });
+    const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+    }
+    const response = await fetch(`${URL}/definitions`, requestOptions);
+    const data = await response.json();
+    return data
+}
 async function startNewGame() {
-    try {
-        const goalWordDisplay = document.getElementById('new-word-text-field');
-        const newGoalWord = goalWordDisplay?.value;
+    try {  
+        const customGoalWordField = document.getElementById('new-word-text-field');
+        const newGoalWord = customGoalWordField?.value;
         const goalWordTypeDisplay = document.getElementById('new-word-type');
         const newGoalWordType = goalWordTypeDisplay?.value ;
         const body = JSON.stringify({ goalWord: newGoalWord , goalWordType: newGoalWordType === 'category' ? null : newGoalWordType })
@@ -393,7 +411,7 @@ async function startNewGame() {
         startTime = data.gameStartTime * 1000;
         goalWord = data.goalWord;
         gameId = data.gameId;
-        goalWordDisplay.value = null;
+        customGoalWordField.value = null;
         // const goalWordDisplay = document.getElementById('goal-word-display');
         // goalWordDisplay.textContent = `The word is ${goalWord}`;
       } catch (error) {
@@ -409,7 +427,7 @@ async function startNewGame() {
       await getNewQuestions(null, null);
 
       if (goalWord) {
-        const goalWordDisplay = document.getElementById('goal-word-display');
+        goalWordDefinition = await getGoalWordDefinition(goalWord);
         goalWordDisplay.textContent = `The goal word is ${goalWord}`; 
         startTimer();
       }

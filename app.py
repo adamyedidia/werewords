@@ -380,7 +380,6 @@ def edit_question():
 
     # set the endpoint URL
     url = "https://api.openai.com/v1/engines/davinci-codex/completions"
-    print(request.data)
     game_id = request.json.get('gameId')
     question_answer_pair_id = request.json.get('questionAnswerPairId')
 
@@ -411,6 +410,20 @@ def edit_question():
     # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
 
     return _get_response_inner(messages, game_id)
+
+@app.route('/definitions', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def definition():
+    word = request.json.get('word')
+    url = f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}'
+
+    response = requests.get(url).json()[0]
+    definition = "failed to get definition :("
+    try:
+        definition = response['meanings'][0]['definitions'][0]['definition']
+    except:
+        print(f'failed to get definiition for {word}')
+    return _process_response(definition)
 
 # Start the server
 if __name__ == '__main__':
