@@ -326,19 +326,10 @@ async function deleteQuestion(questionAnswerPairId) {
         }),
     };
 
+    console.log(requestOptions.body);
     const response = await fetch(`${URL}/questions`, requestOptions);
-
     const data = await response.json();
     const reason = data.reason;
-
-    if (reason === 'Wrong password') {
-        localStorage.setItem('password', '');
-        if (!localStorage.getItem('alerted')) {
-            localStorage.setItem('alerted','true');
-            alert('password was rejected by the server');
-        }
-        window.location.href = 'index.html';
-    }
 
     if (data.victory) {
         displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
@@ -346,6 +337,31 @@ async function deleteQuestion(questionAnswerPairId) {
         return data.questions;
     }    
 }
+
+async function editQuestion(questionAnswerPairId) {
+    const requestOptions = {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            questionAnswerPairId,
+            password: localStorage.getItem('password'),
+            gameId,
+        }),
+    };
+
+    const response = await fetch(`${URL}/questions/edit`, requestOptions);
+
+    const data = await response.json();
+    const reason = data.reason;
+
+    if (data.victory) {
+        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+    } else {
+        return data.questions;
+    }    
+}
+
 
 function clearQuestions() {
     questionArea.innerHTML = '';
@@ -566,8 +582,6 @@ function onLoad () {
             await rootsReminder();
         }
         if (event.key === 'd') {
-            console.log(messageMousedOver);
-            console.log(messages);
             
             if (messageMousedOver) {
                 const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
@@ -586,6 +600,24 @@ function onLoad () {
                 }    
             } else {
                 removeHint();
+            }
+        }
+        if (event.key == 'e') {
+            if (messageMousedOver) {
+                const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
+                const newQuestionsFromServer = await editQuestion(questionAnswerPairId);
+
+                questions.push(...newQuestionsFromServer);
+                newQuestionsFromServer.forEach(processQuestion);
+
+                for (let i = messages.children.length - 1; i >= 0; i--) {
+                    if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && messages.children[i].className == 'speech-bubble') {
+                        tc = messages.children[i].children[1].textContent;
+                        messages.children[i].children[1].textContent = tc === 'no' ? 'yes' : tc === 'yes' ? 'no' : tc;
+                    }
+                }    
+
+
             }
         }
         if (event.key === 'f') {
