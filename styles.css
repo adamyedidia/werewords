@@ -162,4 +162,5 @@ select option {
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
+  line-height: .75;
 }

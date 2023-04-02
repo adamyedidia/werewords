@@ -2,14 +2,13 @@ const passwordInput = document.getElementById('passwordInput');
 const submitPassword = document.getElementById('submitPassword');
 
 function handlePasswordSubmit() {
+    console.log('handle password submit');
     localStorage.setItem('alerted','');
     const password = passwordInput.value;
-    // Store the password in localStorage
     localStorage.setItem('password', password);
 
     passwordInput.value = '';
     if (password !== "" && password !== null && password !== undefined) {
-        // Redirect to the existing index.html file
         window.location.href = 'game_page.html';
     }
 }
@@ -23,3 +22,5 @@ passwordInput.addEventListener('keydown', (event) => {
         handlePasswordSubmit();
     }
 });
+
+passwordInput.focus();
