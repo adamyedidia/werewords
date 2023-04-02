@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, make_response
+from flask_cors import CORS, cross_origin
 import openai
 import requests
 from settings import OPENAI_SECRET_KEY, PASSWORD, LOCAL
@@ -17,6 +18,7 @@ from redis_utils import rget, rset
 from functools import wraps
 
 app = Flask(__name__)
+CORS(app)
 logger = logging.getLogger(__name__)
 
 class UserReply(Enum):
@@ -84,10 +86,7 @@ def create_app():
 
 
 def _process_response(raw_resp: dict[str, Any]) -> Any:
-    resp = jsonify(raw_resp)
-    resp.headers['Access-Control-Allow-Origin'] = '*'
-    # print(resp.headers)
-    return add_cors_headers(resp)
+    return jsonify(raw_resp)
 
 
 def _failure_response(reason: Optional[str] = None) -> dict[str, Any]:
@@ -122,7 +121,10 @@ def process_user_reply(user_reply: UserReply, sounds_like_hints: Optional[list[s
                 return "Try guessing my word now!"
             
     elif user_reply == UserReply.ROOTS_REMINDER:
-        return f"Try listing the first ten words you think of that are a different form of the following words: {', '.join([*(meaning_hints or []), *(sounds_like_hints or [])])}"
+        return (
+            f"Try listing the first ten words you think of that share a lemma with at least one of the following words: {', '.join([*(meaning_hints or []), *(sounds_like_hints or [])])}"
+            f"For example, colorful shares a lemma with color"
+        )
     else:
         raise Exception(f"Invalid user reply {user_reply}")
 
@@ -370,6 +372,58 @@ def delete_question():
 
     return _get_response_inner(messages, game_id)
 
+@app.route("/questions/edit", methods=['POST', 'OPTIONS'])
+@cross_origin()
+def edit_question():
+    # set your API key
+    openai.api_key = OPENAI_SECRET_KEY
+
+    # set the endpoint URL
+    url = "https://api.openai.com/v1/engines/davinci-codex/completions"
+    game_id = request.json.get('gameId')
+    question_answer_pair_id = request.json.get('questionAnswerPairId')
+
+    sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
+    meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
+
+    sounds_like_hints_initial_str = (
+        f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
+        if sounds_like_hints else ''
+    )
+    meaning_hints_initial_str = (
+        f'As a hint, my word has a meaning related to the following words: {", ".join(meaning_hints)}. ' 
+        if meaning_hints else ''
+    )
+
+    def invert(s):
+        return 'yes' if s == 'no' else 'no' if s == 'yes' else s
+
+    def maybe_adjust_answer(message):
+        if message[0] == question_answer_pair_id and message[1]['role'] == 'user':
+            message[1]['content'] = invert(message[1]['content'])
+        return message
+
+    messages = json.loads(rget('messages', game_id=game_id) or '[]')
+    messages = [maybe_adjust_answer(message) for message in messages]
+    rset('messages', json.dumps(messages), game_id=game_id)
+
+    # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
+
+    return _get_response_inner(messages, game_id)
+
+@app.route('/definitions', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def definition():
+    word = request.json.get('word')
+    url = f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}'
+
+    response = requests.get(url).json()[0]
+    definition = "failed to get definition :("
+    try:
+        definition = response['meanings'][0]['definitions'][0]['definition']
+    except:
+        print(f'failed to get definiition for {word}')
+    return _process_response(definition)
 
 # Start the server
 if __name__ == '__main__':
