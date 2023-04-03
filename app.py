@@ -247,7 +247,7 @@ def _get_response_inner(messages: list, game_id: str) -> str:
                 },
                 {"role": "assistant", "content": "Sounds fun! Let's play. Have you thought of a word?"},
                 {"role": "user", "content": f"Yes, please go ahead and start! Please ask me a question about my word!"},
-                *[message[1] for message in messages[-40:]],
+                *[message[1] for message in [*messages[:10], messages[-30:]],
             ]
     
     response = openai.ChatCompletion.create(
