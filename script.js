@@ -354,6 +354,14 @@ function processQuestion(question, useThisRow, useThisColumn) {
     bubble.addEventListener('mouseleave', () => { mousedOver = null});
     questionArea.appendChild(bubble);
 
+    // Add the animation class
+    bubble.classList.add('new-question-animation');
+
+    // Remove the animation class after the animation is completed (0.5 seconds)
+    setTimeout(() => {
+        bubble.classList.remove('new-question-animation');
+    }, 500);
+
     fadeOut(bubble, 20000);    
 
     const newQuestion = {
