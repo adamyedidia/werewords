@@ -136,14 +136,16 @@ function addMessage(message, isQuestion, questionAnswerPairId) {
     messages.appendChild(li);    
 }
 
-function fadeOutAndRemove(element, delay) {
-    setTimeout(() => {
-        element.classList.add('fade-out');
-        setTimeout(() => {
-            element.remove();
-        }, 1000);
-    }, delay);
-}
+// This code was dead anyways and confusing since it had the same name as live code
+
+// function fadeOutAndRemove(element, delay) {
+//     setTimeout(() => {
+//         element.classList.add('fade-out');
+//         setTimeout(() => {
+//             element.remove();
+//         }, 1000);
+//     }, delay);
+// }
 
 function stripPunctuation(str) {
     return str.replace(/[^\w\s-]/g, '').replace(/[\s]+/g, ' ').trim().toLowerCase();
@@ -181,26 +183,22 @@ async function makeWordIntoHint(word, isSoundsLike) {
 //     }, 10);
 // }
 
-function fadeOutAndRemove(element, duration) {
+function fadeOut(element, duration) {
 const start = Date.now();
 
 function update() {
     const elapsed = Date.now() - start;
-    const opacity = 1 - Math.min(1, elapsed / duration);
-    element.style.opacity = opacity;
+    const redComponent = 0;
+    const greenComponent = 170 * Math.min(1, elapsed / duration);
+    const blueComponent = 255 - ((255 - 187) * Math.min(1, elapsed / duration));
+    color = `rgba(${redComponent}, ${greenComponent}, ${blueComponent}, 1)`
+    element.style.background = color;
+    element.style.borderTopColor = color;
 
-    if (opacity === 0) {
-        element.removeEventListener('click', handleClick);
-        element.removeEventListener('contextmenu', handleClick);
-        element.parentNode.removeChild(element);
-    } else {
-        requestAnimationFrame(update);
-    }
+    requestAnimationFrame(update);
 }
 
-setTimeout(() => {
     requestAnimationFrame(update);
-}, 10000); // start fading out after 5 seconds
 }
 
 async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
@@ -356,7 +354,7 @@ function processQuestion(question, useThisRow, useThisColumn) {
     bubble.addEventListener('mouseleave', () => { mousedOver = null});
     questionArea.appendChild(bubble);
 
-    // fadeOutAndRemove(bubble, 30000);    
+    fadeOut(bubble, 20000);    
 
     const newQuestion = {
         element: bubble,
