@@ -222,3 +222,47 @@ select option {
 .new-question-animation {
   animation: expand-contract 0.5s ease-in-out;
 }
+.green-flash,
+.red-flash {
+  animation-duration: 200ms;
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+}
+
+.green-flash {
+  animation-name: greenFlash;
+}
+
+.green-flash::before {
+  animation-name: greenFlash;
+}
+
+.red-flash {
+  animation-name: redFlash;
+}
+
+.red-flash::before {
+  animation-name: redFlash;
+}
+
+@keyframes greenFlash {
+  0% {
+    background-color: rgba(0, 180, 0, 1);
+    border-color: rgba(0, 180, 0, 1);
+  }
+  100% {
+    background-color: rgba(0, 180, 0, 0);
+    border-color: rgba(0, 180, 0, 0);
+  }
+}
+
+@keyframes redFlash {
+  0% {
+    background-color: rgba(255, 0, 0, 1);
+    border-color: rgba(255, 0, 0, 1);
+  }
+  100% {
+    background-color: rgba(255, 0, 0, 0);
+    border-color: rgba(255, 0, 0, 0);
+  }
+}

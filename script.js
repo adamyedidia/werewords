@@ -85,7 +85,9 @@ function removeQuestionAreaBubble(question) {
     if (question.dataset.row && question.dataset.column) {
         grid[question.dataset.row][question.dataset.column] = null;
     }
-    question.remove()
+    setTimeout(() => {
+        question.remove();
+      }, 200);
 }
 
 function addMessage(message, isQuestion, questionAnswerPairId) {
@@ -310,7 +312,17 @@ function handleClick(e) {
     const answer = e.button === 0 ? 'yes' : 'no';
     const question = e.target.textContent;
 
+    if (answer.toLowerCase() === 'yes') {
+        e.target.classList.add('green-flash');
+    } else if (answer.toLowerCase() === 'no') {
+        e.target.classList.add('red-flash');
+    }
+
     const questionAnswerPairId = generateQuestionAnswerPairId();
+
+    setTimeout(() => {
+        e.target.classList.remove('green-flash', 'red-flash');
+    }, 500);
 
     addMessage(`Q: ${question}`, true, questionAnswerPairId);
     addMessage(`A: ${answer}`, false, questionAnswerPairId);
