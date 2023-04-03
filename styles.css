@@ -7,6 +7,10 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  width: 100vw; /* Add this line to set the width to the viewport width */
+  box-sizing: border-box; /* Add this line to include padding and border in the width calculation */
+  padding: 0 20px; /* Add this line to add padding to left and right */
+  position: relative; /* Add this line to set the position property for the container */
 }
 
 .messages-widget {
@@ -21,7 +25,17 @@ body {
 }
 
 .question-area {
+  /* display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+  grid-template-rows: auto;
+  grid-gap: 10px; 
+  justify-content: center;
+  align-items: center; */
+  position: relative;
   text-align: center;
+  width: 720px; /* the total width of the grid */
+  height: 600px; /* the total height of the grid */
+  margin: 0 auto;  
 }
 
 .question {
@@ -163,4 +177,32 @@ select option {
   left: 50%;
   transform: translateX(-50%);
   line-height: .75;
+}
+
+.question-grid-container {
+  width: calc(4 * 180px); 
+  height: calc(3 * 200px);
+  position: relative;
+  overflow: hidden; /* hide questions that are outside the grid */
+  margin: 0 auto; /* center the container horizontally */
+}
+
+.question {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  /* other styles */
+}
+
+.new-question-bubble {
+  position: absolute;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 150px; /* adjust the value to your preference */
+}
+
+.speech-bubble {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }

@@ -1,8 +1,38 @@
 const startingQuestions = ['Is it a noun?', 'Is it a verb?', 'Is it an adjective?'];
 const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
+const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
+
+function addToGrid(question) {
+    let oldestQuestion = null;
+    let oldestTimestamp = Infinity;
+    let oldestRow = 0;
+    let oldestColumn = 0;
+  
+    for (let row = 0; row < grid.length; row++) {
+      for (let column = 0; column < grid[row].length; column++) {
+        const currentQuestion = grid[row][column];
+  
+        if (!currentQuestion) {
+          grid[row][column] = question;
+          return { row, column };
+        } else if (currentQuestion.timestamp < oldestTimestamp) {
+          oldestTimestamp = currentQuestion.timestamp;
+          oldestQuestion = currentQuestion;
+          oldestRow = row;
+          oldestColumn = column;
+        }
+      }
+    }
+  
+    // Replace the oldest question with the new question
+    grid[oldestRow][oldestColumn].element.remove()
+    grid[oldestRow][oldestColumn] = question;
+    return { row: oldestRow, column: oldestColumn };
+  }
+
 let questions = [...startingQuestions];
-questions.forEach(processQuestion)
+// questions.forEach(processQuestion)
 
 let goalWordDefinition = "";
 const goalWordDisplay = document.getElementById('goal-word-display');
@@ -36,6 +66,13 @@ function startTimer() {
         clearInterval(timerInterval);
     }
     timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function removeQuestionAreaBubble(question) {
+    if (question.dataset.row && question.dataset.column) {
+        grid[question.dataset.row][question.dataset.column] = null;
+    }
+    question.remove()
 }
 
 function addMessage(message, isQuestion, questionAnswerPairId) {
@@ -267,7 +304,8 @@ function handleClick(e) {
     addMessage(`Q: ${question}`, true, questionAnswerPairId);
     addMessage(`A: ${answer}`, false, questionAnswerPairId);
 
-    e.target.remove();
+    removeQuestionAreaBubble(e.target)
+    // e.target.remove();
     askQuestion(question, answer, questionAnswerPairId);
 }
 
@@ -290,13 +328,13 @@ function rootsReminder() {
 }
 
 function removeHint() {
-    mousedOver && mousedOver.remove()
+    mousedOver && removeQuestionAreaBubble(mousedOver)
 }
 
 
 function processQuestion(question) {
     const bubble = document.createElement('div');
-    bubble.className = 'speech-bubble';
+    bubble.className = 'new-question-bubble speech-bubble';
     bubble.textContent = question;
     bubble.addEventListener('click', handleClick);
     bubble.addEventListener('contextmenu', handleClick);
@@ -305,7 +343,26 @@ function processQuestion(question) {
     bubble.addEventListener('mouseleave', () => { mousedOver = null});
     questionArea.appendChild(bubble);
 
-    fadeOutAndRemove(bubble, 30000);    
+    // fadeOutAndRemove(bubble, 30000);    
+
+    const newQuestion = {
+        element: bubble,
+        timestamp: Date.now(),
+        // other properties if needed
+      };
+      
+      const position = addToGrid(newQuestion);
+      newQuestion.row = position.row;
+      newQuestion.column = position.column;
+
+      const containerWidth = 180; // change this to the desired container width
+    const containerHeight = 200; // change this to the desired container height
+
+    newQuestion.element.style.top = `${position.row * containerHeight}px`;
+    newQuestion.element.style.left = `${position.column * containerWidth}px`;
+    newQuestion.element.dataset.row = position.row;
+    newQuestion.element.dataset.column = position.column;
+
 }
 
 
