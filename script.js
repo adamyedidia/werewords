@@ -714,7 +714,7 @@ function onLoad () {
 
             }
         }
-        if (event.key === 'f') {
+        if (event.key === 'g') {
             event.preventDefault();
             inputField.focus();
         }
