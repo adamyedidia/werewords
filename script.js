@@ -1,18 +1,31 @@
 const startingQuestions = ['Is it a noun?', 'Is it a verb?', 'Is it an adjective?'];
+// Removing these starting indices wouldn't really do anything right now since it defaults 
+// to this order anyway. I wanted to look at other ones but then I think
+// the default is just fine, but I guess I'll leave it here in case.
+const startingRows = [0, 0, 0]
+const startingColumns = [0, 1, 2]
 const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
 const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
 
-function addToGrid(question) {
-    let oldestQuestion = null;
+function addToGrid(question, useThisRow, useThisColumn) {
+
     let oldestTimestamp = Infinity;
     let oldestRow = 0;
     let oldestColumn = 0;
-  
+
+    if (useThisRow != undefined && useThisColumn != undefined) {
+        current = grid[useThisRow][useThisColumn];
+        current && current.element.remove();
+        grid[useThisRow][useThisColumn] = question;
+        return { row: useThisRow , column: useThisColumn }
+    }
+
+
     for (let row = 0; row < grid.length; row++) {
       for (let column = 0; column < grid[row].length; column++) {
         const currentQuestion = grid[row][column];
-  
+        
         if (!currentQuestion) {
           grid[row][column] = question;
           return { row, column };
@@ -204,7 +217,7 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
         }),
     };
 
-    console.log("Sending request to /questions", requestOptions);
+    // console.log("Sending request to /questions", requestOptions);
 
     const response = await fetch(`${URL}/questions`, requestOptions);
     const data = await response.json();
@@ -332,7 +345,7 @@ function removeHint() {
 }
 
 
-function processQuestion(question) {
+function processQuestion(question, useThisRow, useThisColumn) {
     const bubble = document.createElement('div');
     bubble.className = 'new-question-bubble speech-bubble';
     bubble.textContent = question;
@@ -351,7 +364,7 @@ function processQuestion(question) {
         // other properties if needed
       };
       
-      const position = addToGrid(newQuestion);
+      const position = addToGrid(newQuestion, useThisRow, useThisColumn);
       newQuestion.row = position.row;
       newQuestion.column = position.column;
 
@@ -372,7 +385,8 @@ async function askQuestion(question, answer, questionAnswerPairId) {
         const newQuestionsFromServer = await getNewQuestions(newQuestion, answer, questionAnswerPairId);
         questions.push(...newQuestionsFromServer);
 
-        newQuestionsFromServer.forEach(processQuestion);
+        // Foreach passes the index and array if you don't do this little trivial anonymous function
+        newQuestionsFromServer.forEach((q) => processQuestion(q) );
     } catch (error) {
         console.error('Error:', error);
     }
@@ -427,10 +441,15 @@ async function editQuestion(questionAnswerPairId) {
 
 
 function clearQuestions() {
+    grid.forEach((l) => l.fill(null));
+    
     questionArea.innerHTML = '';
     messages.innerHTML = '';
-    questions = [...startingQuestions];
-    questions.forEach(processQuestion)
+
+    startingQuestions.forEach((q, i) => {
+        processQuestion(q, startingRows[i], startingColumns[i])
+    })
+    
 }
 
 async function startOver() {
@@ -663,13 +682,13 @@ function onLoad () {
                 const newQuestionsFromServer = await deleteQuestion(questionAnswerPairId);
 
                 questions.push(...newQuestionsFromServer);
-                newQuestionsFromServer.forEach(processQuestion);
+                newQuestionsFromServer.forEach((q) => processQuestion(q));
 
                 for (let i = messages.children.length - 1; i >= 0; i--) {
                     const otherQuestionAnswerPairId = messages.children[i].getAttribute('data-question-answer-pair-id');
                                 
                     if (questionAnswerPairId === otherQuestionAnswerPairId) {
-                        console.log(`deleting ${questionAnswerPairId}`);
+                        // console.log(`deleting ${questionAnswerPairId}`);
                         messages.children[i].remove();
                     }
                 }    
@@ -683,7 +702,7 @@ function onLoad () {
                 const newQuestionsFromServer = await editQuestion(questionAnswerPairId);
 
                 questions.push(...newQuestionsFromServer);
-                newQuestionsFromServer.forEach(processQuestion);
+                newQuestionsFromServer.forEach((q) => processQuestion(q) );
 
                 for (let i = messages.children.length - 1; i >= 0; i--) {
                     if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && messages.children[i].className == 'speech-bubble') {
