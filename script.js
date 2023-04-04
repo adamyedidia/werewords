@@ -795,14 +795,22 @@ function exitHowToPlay() {
     howToPlayPopup.style.opacity = '0';
 }
 
-
-function toggleHowToPlay() {
+document.addEventListener('DOMContentLoaded', function () {
     const howToPlayPopup = document.getElementById('how-to-play-popup');
+    howToPlayPopup.style.visibility = 'hidden';
+});
+
+function toggleHowToPlay(event) {
+    event.stopPropagation();
+    const howToPlayPopup = document.getElementById('how-to-play-popup');
+    const howToPlayBtnText = document.getElementById('how-to-play-btn-text');
     if (howToPlayPopup.style.visibility === 'hidden') {
       howToPlayPopup.style.visibility = 'visible';
       howToPlayPopup.style.opacity = '1';
+      howToPlayBtnText.textContent = 'Close how to play';
     } else {
       howToPlayPopup.style.visibility = 'hidden';
       howToPlayPopup.style.opacity = '0';
+      howToPlayBtnText.textContent = 'How to play';
     }
   }
