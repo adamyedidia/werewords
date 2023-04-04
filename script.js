@@ -6,6 +6,7 @@ const startingRows = [0, 0, 0]
 const startingColumns = [0, 1, 2]
 const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
+const goalWordTypeDisplay = document.getElementById('new-word-type');
 const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
 
 function addToGrid(question, useThisRow, useThisColumn) {
@@ -491,8 +492,10 @@ async function startNewGame() {
     try {  
         const customGoalWordField = document.getElementById('new-word-text-field');
         const newGoalWord = customGoalWordField?.value;
-        const goalWordTypeDisplay = document.getElementById('new-word-type');
         const newGoalWordType = goalWordTypeDisplay?.value ;
+        if (newGoalWordType) {
+            localStorage.setItem('goalWordType', newGoalWordType)
+        }
         const body = JSON.stringify({ goalWord: newGoalWord , goalWordType: newGoalWordType === 'category' ? null : newGoalWordType })
         const requestOptions = {
             method: 'POST',
@@ -677,6 +680,10 @@ async function moveToGarbage(hint, hintType) {
 }
 
 function onLoad () {
+    if (localStorage.getItem('goalWordType')) {
+        goalWordTypeDisplay.value = localStorage.getItem('goalWordType'); 
+    }
+
     startNewGame();
     mousedOver = null;
    
