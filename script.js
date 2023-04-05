@@ -418,6 +418,7 @@ async function fetchLeaderboard() {
     let submitLeaderboardName = async () => {
         const leaderboardName = leaderboardNameInput.value;
         if (leaderboardName) {
+            localStorage.setItem('leaderboardName', leaderboardName);
             // Make a POST request to /leaderboard_names with gameId and leaderboardName in the json body
             await fetch(`${URL}/leaderboard_names`, {
                 method: 'POST',
