@@ -972,8 +972,8 @@ if (localStorage.getItem('leaderboardName')) {
 
 function setLeaderboardName() {
     const leaderboardName = leaderboardNameInput.value;
+    localStorage.setItem('leaderboardName', leaderboardName);
     if (leaderboardName) {
-        localStorage.setItem('leaderboardName', leaderboardName);
         leaderboardNameDisplay.textContent = `Your leaderboard name is: ${leaderboardName}`;
         leaderboardNameDisplay.style.display = 'block';
     } else {
