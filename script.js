@@ -12,6 +12,9 @@ const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
 let victory = false;
 
 const handleKeyDown = async (event) => {
+    if (event.ctrlKey) {
+        return 
+    }
     if (event.key === 's') {
         await startOver();
     }
@@ -395,6 +398,10 @@ async function fetchLeaderboard() {
     document.body.innerHTML = '';
   
     const handleKeyDownOnVictoryPage = async (e) => {
+        if (e.ctrlKey) {
+            console.log(e.ctrlKey);
+            return
+        }
         if (e.key === 'n') {
             location.reload();
         } 
