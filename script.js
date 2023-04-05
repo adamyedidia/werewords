@@ -424,6 +424,8 @@ async function fetchLeaderboard() {
         }
     })
 
+    leaderboardNameInput.value = localStorage.getItem('leaderboardName');
+    
     leaderboardNameInput.addEventListener('focus', () => {
         document.removeEventListener('keydown', handleKeyDownOnVictoryPage);
     });
