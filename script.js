@@ -804,6 +804,11 @@ function onLoad () {
             event.preventDefault();
             inputField.focus();
         }
+        if (event.key === 'l') {
+            event.preventDefault();
+            leaderboardNameInput.focus();
+        }
+
         if (event.key === 'Escape') {
             exitHowToPlay();
         }
@@ -841,6 +846,16 @@ function onLoad () {
     // Add the keydown listener back to the document when the input field is blurred 
     document.addEventListener('keydown', handleKeyDown);
     });
+
+    leaderboardNameInput.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            await setLeaderboardName();
+        }
+        if (e.key === 'Escape') {
+            leaderboardNameInput.blur();
+        }
+    })
+
 
     leaderboardNameInput.addEventListener('focus', () => {
         document.removeEventListener('keydown', handleKeyDown);
@@ -909,12 +924,18 @@ if (localStorage.getItem('leaderboardName')) {
   leaderboardNameInput.value = localStorage.getItem('leaderboardName');
 }
 
-setLeaderboardNameButton.addEventListener('click', () => {
-  const leaderboardName = leaderboardNameInput.value;
-  if (leaderboardName) {
-    localStorage.setItem('leaderboardName', leaderboardName);
-  }
-});
+function setLeaderboardName() {
+    const leaderboardName = leaderboardNameInput.value;
+    if (leaderboardName) {
+        localStorage.setItem('leaderboardName', leaderboardName);
+        leaderboardNameDisplay.textContent = `Your leaderboard name is: ${leaderboardName}`;
+        leaderboardNameDisplay.style.display = 'block';
+    } else {
+        leaderboardNameDisplay.style.display = 'none';
+    }
+}
+
+setLeaderboardNameButton.addEventListener('click', setLeaderboardName);
 
 const leaderboardNameDisplay = document.createElement('span');
 
@@ -929,15 +950,3 @@ if (localStorage.getItem('leaderboardName')) {
 }
 
 leaderboardNameWrapper.appendChild(leaderboardNameDisplay);
-
-setLeaderboardNameButton.addEventListener('click', () => {
-  const leaderboardName = leaderboardNameInput.value;
-  if (leaderboardName) {
-    localStorage.setItem('leaderboardName', leaderboardName);
-    leaderboardNameDisplay.textContent = `Your leaderboard name is: ${leaderboardName}`;
-    leaderboardNameDisplay.style.display = 'block';
-  } else {
-    leaderboardNameDisplay.style.display = 'none';
-  }
-});
-
