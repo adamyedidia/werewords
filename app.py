@@ -48,29 +48,6 @@ class GoalWordType(Enum):
     US = 'us'
     UK = 'uk'
 
-
-def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
-    if goal_word in EASY_PDT_WORDS:
-        return GoalWordType.EASY
-    elif goal_word in DEFAULT_WORDS:
-        return GoalWordType.MEDIUM
-    elif goal_word in HARD_PDT_WORDS:
-        return GoalWordType.HARD
-    elif goal_word in HARD_MATH_WORDS:
-        return GoalWordType.HARD_MATH
-    elif goal_word in VERY_HARD_WORDS:
-        return GoalWordType.VERY_HARD
-    elif goal_word in HOWITZER:
-        return GoalWordType.HOWITZER
-    elif goal_word in TULLE:
-        return GoalWordType.TULLE
-    elif goal_word in US:
-        return GoalWordType.US
-    elif goal_word in UK:
-        return GoalWordType.UK
-    return None
-
-
 word_type_to_words_list = {
     GoalWordType.EASY: EASY_PDT_WORDS,
     GoalWordType.MEDIUM: DEFAULT_WORDS,
@@ -83,6 +60,14 @@ word_type_to_words_list = {
     GoalWordType.UK: UK 
 }
 
+
+def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
+    for k, v in word_type_to_words_list.items():
+        if goal_word in v:
+            print(v)
+            return k
+    return None
+    
 # Define some example data for the API
 students = [
     {'id': 1, 'name': 'Alice', 'age': 21},
@@ -336,7 +321,6 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
 @api_endpoint
 def get_leaderboard_info():
     raw_goal_word_type = request.args.get('goalWordType')
-    print(raw_goal_word_type)
     # goal_word = request.args.get('goalWord')
 
     leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
@@ -349,8 +333,6 @@ def get_leaderboard_info():
 
     leaderboard_games_items = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).items()
 
-    print(leaderboard_games_items)
-
     return_list = []
     for key, value in leaderboard_games_items:
         if not value:
@@ -361,6 +343,25 @@ def get_leaderboard_info():
     print(return_list)
 
     return sorted(return_list, key=lambda x: float(x[2]))
+
+@app.route('/best_time', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def get_best_time():
+    goal_word = request.json.get('goalWord')
+
+    leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
+
+    if (tmp := get_goal_word_type(goal_word)):
+        goal_word_type = tmp.value
+    else:
+        goal_word_type = ''
+
+    leaderboard = leaderboard_games.get(goal_word_type) or {}
+
+    if goal_word not in leaderboard:
+        return _process_response(None)
+    else:
+        return _process_response(sorted(leaderboard[goal_word], key=lambda x: x[1])[0][1])
 
 
 @app.route("/questions", methods=['POST', 'OPTIONS'])
