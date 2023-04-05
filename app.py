@@ -48,6 +48,29 @@ class GoalWordType(Enum):
     US = 'us'
     UK = 'uk'
 
+
+def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
+    if goal_word in EASY_PDT_WORDS:
+        return GoalWordType.EASY
+    elif goal_word in DEFAULT_WORDS:
+        return GoalWordType.MEDIUM
+    elif goal_word in HARD_PDT_WORDS:
+        return GoalWordType.HARD
+    elif goal_word in HARD_MATH_WORDS:
+        return GoalWordType.HARD_MATH
+    elif goal_word in VERY_HARD_WORDS:
+        return GoalWordType.VERY_HARD
+    elif goal_word in HOWITZER:
+        return GoalWordType.HOWITZER
+    elif goal_word in TULLE:
+        return GoalWordType.TULLE
+    elif goal_word in US:
+        return GoalWordType.US
+    elif goal_word in UK:
+        return GoalWordType.UK
+    return None
+
+
 word_type_to_words_list = {
     GoalWordType.EASY: EASY_PDT_WORDS,
     GoalWordType.MEDIUM: DEFAULT_WORDS,
@@ -168,6 +191,8 @@ def start_new_game():
     rset('game_start_time', game_start_time, game_id=game_id)
     rset('question_count', '0', game_id=game_id)
 
+    print(goal_word)
+
     return _process_response({
         'goalWord': goal_word,
         'gameStartTime': game_start_time,
@@ -235,7 +260,7 @@ def make_word_into_hint():
     })
 
 
-def _get_response_inner(messages: list, game_id: str) -> str:
+def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> str:
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
     
@@ -285,13 +310,16 @@ def _get_response_inner(messages: list, game_id: str) -> str:
 
     if victory:
         with leaderboard_lock:
+            goal_word_type = get_goal_word_type(goal_word or '')
             leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
             games_with_matching_word = leaderboard_games[goal_word]
             if games_with_matching_word:
                 games_with_matching_word.append([game_id, victory_time])
                 games_with_matching_word.sort(key=lambda x: x[1])
             else:
-                leaderboard_games[goal_word] = [[game_id, victory_time]]
+                if (goal_word_type or '') not in leaderboard_games:
+                    leaderboard_games[goal_word_type or ''] = {}
+                leaderboard_games[goal_word_type or ''][goal_word] = [[game_id, victory_time]]
             rset('leaderboard_games', json.dumps(leaderboard_games), game_id=None)
 
         if leaderboard_name:
@@ -302,7 +330,22 @@ def _get_response_inner(messages: list, game_id: str) -> str:
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions, 'leaderboardName': leaderboard_name, 'gameId': game_id})
 
-    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
+
+@app.route('/leaderboard')
+@api_endpoint
+def get_leaderboard_info():
+    raw_goal_word_type = request.args.get('goalWordType')
+    # goal_word = request.args.get('goalWord')
+
+    leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
+    leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
+
+    try:
+        goal_word_type = GoalWordType(raw_goal_word_type)
+    except ValueError:
+        goal_word_type = ''
+
+    return sorted([[key, leaderboard_names.get(value[0]) or '', float(value[1])] for key, value in (leaderboard_games.get(goal_word_type) or {}).values()], key=lambda x: float(x[1]))
 
 
 @app.route("/questions", methods=['POST', 'OPTIONS'])
@@ -352,7 +395,7 @@ def get_response():
 
     # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
 
-    return _get_response_inner(messages, game_id)
+    return _get_response_inner(messages, game_id, leaderboard_name)
 
 
 @app.route("/questions", methods=['DELETE', 'OPTIONS'])
