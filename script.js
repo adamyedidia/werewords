@@ -414,11 +414,27 @@ async function fetchLeaderboard() {
     document.body.appendChild(refreshMessage);
 
     document.removeEventListener('keydown', handleKeyDown);
+    
+    let submitLeaderboardName = async () => {
+        const leaderboardName = leaderboardNameInput.value;
+        if (leaderboardName) {
+            // Make a POST request to /leaderboard_names with gameId and leaderboardName in the json body
+            await fetch(`${URL}/leaderboard_names`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ gameId, leaderboardName }),
+            });
 
+            // Refresh the page to show the updated leaderboard
+            location.reload();
+        }
+    }
+    
     leaderboardNameInput.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
-            localStorage.setItem('leaderboardName', leaderboardNameInput.value);
-            location.reload();
+            submitLeaderboardName();
         }
         if (e.key === 'Escape') {
             leaderboardNameInput.blur();
@@ -437,24 +453,8 @@ async function fetchLeaderboard() {
 
     leaderboardNameInput.focus();
 
-    submitLeaderboardNameButton.addEventListener('click', async () => {
-      const leaderboardName = leaderboardNameInput.value;
-      if (leaderboardName) {
-        // Make a POST request to /leaderboard_names with gameId and leaderboardName in the json body
-        await fetch(`${URL}/leaderboard_names`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ gameId, leaderboardName }),
-        });
-  
-        // Refresh the page to show the updated leaderboard
-        location.reload();
-      }
-    });
-  }
-
+    submitLeaderboardNameButton.addEventListener('click', submitLeaderboardName);
+}
 function generateRandomURLSafeString(bits) {
     const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
     const charsInUrlSafeString = Math.ceil(bits / 6);

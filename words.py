@@ -1,6 +1,7 @@
 # PDT words borrowed from http://www.persondothing.com/
 
 EASY_PDT_WORDS = [
+"object",
 "bat",
 "soldier",
 "ship",
