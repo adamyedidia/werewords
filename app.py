@@ -498,9 +498,9 @@ def definition():
     word = request.json.get('word')
     url = f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}'
 
-    response = requests.get(url).json()[0]
     definition = "failed to get definition :("
     try:
+        response = requests.get(url).json()[0]
         definition = response['meanings'][0]['definitions'][0]['definition']
     except:
         print(f'failed to get definiition for {word}')
