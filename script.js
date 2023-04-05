@@ -234,7 +234,7 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
     }
 
     if (data.victory) {
-        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        await displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
     } else {
         return data.questions;
     }    
@@ -261,34 +261,56 @@ function formatTimeDelta(seconds) {
     return timeString;
 }
 
-function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
+async function fetchLeaderboard() {
+    const response = await fetch('/leaderboard');
+    const leaderboardData = await response.json();
+    return leaderboardData;
+  }
+
+  async function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
+    // Fetch leaderboard data
+    const leaderboardData = await fetchLeaderboard();
+  
+    // Generate leaderboard content
+    let leaderboardContent = '<h3>Leaderboard</h3><ol>';
+    for (let entry of leaderboardData) {
+      const [goalWord, playerName, timeTaken] = entry;
+      leaderboardContent += `<li>${playerName} - ${goalWord} - ${formatTimeDelta(timeTaken)}</li>`;
+    }
+    leaderboardContent += '</ol>';
+  
     const victoryMessage = document.createElement('div');
+    const leaderboardMessage = document.createElement('div');
     const refreshMessage = document.createElement('div');
     victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${formatTimeDelta(victoryTime)}</strong>. You won when ChatGPT asked: ${winningQuestion} `;
+    leaderboardMessage.innerHTML = leaderboardContent;
     refreshMessage.innerHTML = `(n to restart)`;
     victoryMessage.style.fontSize = '2em';
     victoryMessage.style.textAlign = 'center';
     victoryMessage.style.marginTop = '2em';
+    leaderboardMessage.style.fontSize = '1em';
+    leaderboardMessage.style.textAlign = 'center';
+    leaderboardMessage.style.marginTop = '2em';
     refreshMessage.style.fontSize = '2em';
     refreshMessage.style.textAlign = 'center';
     refreshMessage.style.marginTop = '2em';
-
-
+  
     // Clear the current content
     document.body.innerHTML = '';
-
+  
     const handleKeyDownOnVictoryPage = async (e) => {
-        if (e.key === 'n') {
-            location.reload();
-        }
+      if (e.key === 'n') {
+        location.reload();
+      }
     }
-
+  
     document.body.addEventListener('keydown', handleKeyDownOnVictoryPage);
-
-    // Add the victory message to the body
+  
+    // Add the victory message and leaderboard to the body
     document.body.appendChild(victoryMessage);
+    document.body.appendChild(leaderboardMessage);
     document.body.appendChild(refreshMessage);
-}
+  }
 
 function generateRandomURLSafeString(bits) {
     const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
