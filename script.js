@@ -417,7 +417,8 @@ async function fetchLeaderboard() {
 
     leaderboardNameInput.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
-            await setLeaderboardName(true);
+            localStorage.setItem('leaderboardName', leaderboardNameInput.value);
+            location.reload();
         }
         if (e.key === 'Escape') {
             leaderboardNameInput.blur();
@@ -893,8 +894,7 @@ function onLoad () {
 
     leaderboardNameInput.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
-            localStorage.setItem('leaderboardName', leaderboardNameInput.value);
-            location.reload();
+            await setLeaderboardName();
         }
         if (e.key === 'Escape') {
             leaderboardNameInput.blur();
