@@ -57,7 +57,7 @@ const handleKeyDown = async (event) => {
             newQuestionsFromServer.forEach((q) => processQuestion(q));
 
             for (let i = messages.children.length - 1; i >= 0; i--) {
-                if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && messages.children[i].className == 'speech-bubble') {
+                if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && ['speech-bubble answer-yes', 'speech-bubble answer-no'].includes(messages.children[i].className)) {
                     tc = messages.children[i].children[1].textContent;
                     messages.children[i].children[1].textContent = tc === 'no' ? 'yes' : tc === 'yes' ? 'no' : tc;
                 }
