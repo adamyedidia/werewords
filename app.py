@@ -318,7 +318,9 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
                 str_goal_word_type = goal_word_type.value if goal_word_type else ''
                 if str_goal_word_type not in leaderboard_games:
                     leaderboard_games[str_goal_word_type] = {}
-                leaderboard_games[str_goal_word_type][goal_word] = [[game_id, victory_time]]
+                if goal_word not in leaderboard_games[str_goal_word_type]:
+                    leaderboard_games[str_goal_word_type][goal_word] = []
+                leaderboard_games[str_goal_word_type][goal_word].append([game_id, victory_time])
             rset('leaderboard_games', json.dumps(leaderboard_games), game_id=None)
 
         if leaderboard_name:
