@@ -241,7 +241,7 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
     }
 
     if (data.victory) {
-        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        await displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
     } else {
         return data.questions;
     }    
@@ -268,34 +268,85 @@ function formatTimeDelta(seconds) {
     return timeString;
 }
 
-function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
+async function fetchLeaderboard() {
+    const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}`);
+    const leaderboardData = await response.json();
+    return leaderboardData;
+  }
+
+  async function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
+    // Fetch leaderboard data
+    const leaderboardData = await fetchLeaderboard();
+  
+    // Generate leaderboard content
+    let leaderboardContent = '<h3>Leaderboard</h3><ol>';
+    for (let entry of leaderboardData) {
+      const [goalWord, playerName, timeTaken] = entry;
+      leaderboardContent += `<li>${playerName} - ${goalWord} - ${formatTimeDelta(timeTaken)}</li>`;
+    }
+    leaderboardContent += '</ol>';
+  
     const victoryMessage = document.createElement('div');
+    const leaderboardMessage = document.createElement('div');
     const refreshMessage = document.createElement('div');
+    const leaderboardNameInput = document.createElement('input');
+    const submitLeaderboardNameButton = document.createElement('button');
+  
     victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${formatTimeDelta(victoryTime)}</strong>. You won when ChatGPT asked: ${winningQuestion} `;
+    leaderboardMessage.innerHTML = leaderboardContent;
     refreshMessage.innerHTML = `(n to restart)`;
+    leaderboardNameInput.placeholder = 'Leaderboard name';
+    submitLeaderboardNameButton.textContent = 'Submit';
+  
     victoryMessage.style.fontSize = '2em';
     victoryMessage.style.textAlign = 'center';
     victoryMessage.style.marginTop = '2em';
+    leaderboardMessage.style.fontSize = '1em';
+    leaderboardMessage.style.textAlign = 'center';
+    leaderboardMessage.style.marginTop = '2em';
+    leaderboardNameInput.style.display = 'block';
+    leaderboardNameInput.style.margin = '2em auto';
+    submitLeaderboardNameButton.style.display = 'block';
+    submitLeaderboardNameButton.style.margin = '1em auto';
     refreshMessage.style.fontSize = '2em';
     refreshMessage.style.textAlign = 'center';
     refreshMessage.style.marginTop = '2em';
-
-
+  
     // Clear the current content
     document.body.innerHTML = '';
-
+  
     const handleKeyDownOnVictoryPage = async (e) => {
-        if (e.key === 'n') {
-            location.reload();
-        }
+      if (e.key === 'n') {
+        location.reload();
+      }
     }
-
+  
     document.body.addEventListener('keydown', handleKeyDownOnVictoryPage);
-
-    // Add the victory message to the body
+  
+    // Add the victory message, leaderboard, and submission widget to the body
     document.body.appendChild(victoryMessage);
+    document.body.appendChild(leaderboardMessage);
+    document.body.appendChild(leaderboardNameInput);
+    document.body.appendChild(submitLeaderboardNameButton);
     document.body.appendChild(refreshMessage);
-}
+  
+    submitLeaderboardNameButton.addEventListener('click', async () => {
+      const leaderboardName = leaderboardNameInput.value;
+      if (leaderboardName) {
+        // Make a POST request to /leaderboard_names with gameId and leaderboardName in the json body
+        await fetch(`${URL}/leaderboard_names`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ gameId, leaderboardName }),
+        });
+  
+        // Refresh the page to show the updated leaderboard
+        location.reload();
+      }
+    });
+  }
 
 function generateRandomURLSafeString(bits) {
     const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';

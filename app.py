@@ -16,10 +16,13 @@ import re
 from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
 from functools import wraps
+from threading import Lock
 
 app = Flask(__name__)
 CORS(app)
 logger = logging.getLogger(__name__)
+
+leaderboard_lock = Lock()
 
 class UserReply(Enum):
     YES = 'yes'
@@ -44,6 +47,29 @@ class GoalWordType(Enum):
     TULLE = 'tulle'
     US = 'us'
     UK = 'uk'
+
+
+def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
+    if goal_word in EASY_PDT_WORDS:
+        return GoalWordType.EASY
+    elif goal_word in DEFAULT_WORDS:
+        return GoalWordType.MEDIUM
+    elif goal_word in HARD_PDT_WORDS:
+        return GoalWordType.HARD
+    elif goal_word in HARD_MATH_WORDS:
+        return GoalWordType.HARD_MATH
+    elif goal_word in VERY_HARD_WORDS:
+        return GoalWordType.VERY_HARD
+    elif goal_word in HOWITZER:
+        return GoalWordType.HOWITZER
+    elif goal_word in TULLE:
+        return GoalWordType.TULLE
+    elif goal_word in US:
+        return GoalWordType.US
+    elif goal_word in UK:
+        return GoalWordType.UK
+    return None
+
 
 word_type_to_words_list = {
     GoalWordType.EASY: EASY_PDT_WORDS,
@@ -232,7 +258,7 @@ def make_word_into_hint():
     })
 
 
-def _get_response_inner(messages: list, game_id: str) -> str:
+def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> str:
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
     
@@ -280,7 +306,59 @@ def _get_response_inner(messages: list, game_id: str) -> str:
                 victory_time = time.time() - float(game_start_time)
                 winning_question = question
 
-    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions})
+    if victory:
+        with leaderboard_lock:
+            goal_word_type = get_goal_word_type(goal_word or '')
+            leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
+            games_with_matching_word = leaderboard_games.get(goal_word)
+            if games_with_matching_word:
+                games_with_matching_word.append([game_id, victory_time])
+                games_with_matching_word.sort(key=lambda x: x[1])
+            else:
+                str_goal_word_type = goal_word_type.value if goal_word_type else ''
+                if str_goal_word_type not in leaderboard_games:
+                    leaderboard_games[str_goal_word_type] = {}
+                leaderboard_games[str_goal_word_type][goal_word] = [[game_id, victory_time]]
+            rset('leaderboard_games', json.dumps(leaderboard_games), game_id=None)
+
+        if leaderboard_name:
+            leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
+            if leaderboard_names.get(game_id) is None:
+                leaderboard_names[game_id] = leaderboard_name
+            rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None)
+
+    return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions, 'leaderboardName': leaderboard_name, 'gameId': game_id})
+
+
+@app.route('/leaderboard')
+@api_endpoint
+def get_leaderboard_info():
+    raw_goal_word_type = request.args.get('goalWordType')
+    print(raw_goal_word_type)
+    # goal_word = request.args.get('goalWord')
+
+    leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
+    leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
+
+    try:
+        goal_word_type = GoalWordType(raw_goal_word_type)
+    except ValueError:
+        goal_word_type = None
+
+    leaderboard_games_items = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).items()
+
+    print(leaderboard_games_items)
+
+    return_list = []
+    for key, value in leaderboard_games_items:
+        if not value:
+            continue
+        sorted_value = sorted(value, key=lambda x: x[1])
+        return_list.append([key, leaderboard_names.get(sorted_value[0][0]), sorted_value[0][1]])
+
+    print(return_list)
+
+    return sorted(return_list, key=lambda x: float(x[2]))
 
 
 @app.route("/questions", methods=['POST', 'OPTIONS'])
@@ -296,6 +374,7 @@ def get_response():
     raw_user_reply = request.json.get('userReply')
     game_id = request.json.get('gameId')
     question_answer_pair_id = request.json.get('questionAnswerPairId')
+    leaderboard_name = request.json.get('leaderboardName')
 
     sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
     meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
@@ -329,7 +408,7 @@ def get_response():
 
     # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
 
-    return _get_response_inner(messages, game_id)
+    return _get_response_inner(messages, game_id, leaderboard_name)
 
 
 @app.route("/questions", methods=['DELETE', 'OPTIONS'])
@@ -345,6 +424,7 @@ def delete_question():
     raw_user_reply = request.json.get('userReply')
     game_id = request.json.get('gameId')
     question_answer_pair_id = request.json.get('questionAnswerPairId')
+    leaderboard_name = request.json.get('leaderboardName')
     
     sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
     meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
@@ -370,7 +450,7 @@ def delete_question():
 
     # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
 
-    return _get_response_inner(messages, game_id)
+    return _get_response_inner(messages, game_id, leaderboard_name)
 
 @app.route("/questions/edit", methods=['POST', 'OPTIONS'])
 @cross_origin()
@@ -385,6 +465,7 @@ def edit_question():
 
     sounds_like_hints = json.loads(rget('sounds_like_hints', game_id=game_id) or '[]')
     meaning_hints = json.loads(rget('meaning_hints', game_id=game_id) or '[]')
+    leaderboard_name = request.json.get('leaderboardName')
 
     sounds_like_hints_initial_str = (
         f'As a hint, my word sounds similar to the following words: {", ".join(sounds_like_hints)}. ' 
@@ -409,7 +490,7 @@ def edit_question():
 
     # messages.append({'content': response['choices'][0]['message']['content'], 'role': 'assistant'})
 
-    return _get_response_inner(messages, game_id)
+    return _get_response_inner(messages, game_id, leaderboard_name)
 
 @app.route('/definitions', methods=['POST', 'OPTIONS'])
 @cross_origin()
@@ -424,6 +505,19 @@ def definition():
     except:
         print(f'failed to get definiition for {word}')
     return _process_response(definition)
+
+@app.route("/leaderboard_names", methods=['POST', 'OPTIONS'])
+@api_endpoint
+def present_leaderboard_name():
+    game_id = request.json.get('gameId')
+    leaderboard_name = request.json.get('leaderboardName')
+    leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
+    if leaderboard_names.get(game_id) is None:
+        leaderboard_names[game_id] = leaderboard_name
+    rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None)
+
+    return _process_response({'success': True})
+
 
 # Start the server
 if __name__ == '__main__':
