@@ -401,7 +401,7 @@ async function fetchLeaderboard() {
         submitLeaderboardNameButton.textContent = 'Submit';        
         submitLeaderboardNameButton.style.display = 'block';
         submitLeaderboardNameButton.style.margin = '1em auto';        
-      }
+    }
 
     victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${formatTimeDelta(victoryTime)}</strong>. You won when ChatGPT asked: ${winningQuestion} `;
     leaderboardMessage.innerHTML = leaderboardContent;
@@ -440,7 +440,7 @@ async function fetchLeaderboard() {
     document.body.appendChild(victoryMessage);
     document.body.appendChild(leaderboardMessage);
     leaderboardNameInput &&  document.body.appendChild(leaderboardNameInput);
-    document.body.appendChild(submitLeaderboardNameButton);
+    submitLeaderboardNameButton && document.body.appendChild(submitLeaderboardNameButton);
     document.body.appendChild(refreshMessage);
 
     document.removeEventListener('keydown', handleKeyDown);
