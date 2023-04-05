@@ -702,7 +702,9 @@ async function getGoalWordDefinition(goalWord) {
 
 async function getGoalWordTime(goalWord) {
     // Remove this return to turn on the goal word time stuff
-    return null;
+    if (!localStorage.getItem('werewords')) {
+        return null;
+    }
     const body = JSON.stringify({ goalWord });
     const requestOptions = {
             method: 'POST',
