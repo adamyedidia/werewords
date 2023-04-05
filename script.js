@@ -7,7 +7,78 @@ const startingColumns = [0, 1, 2]
 const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
 const goalWordTypeDisplay = document.getElementById('new-word-type');
+const inputField = document.getElementById('new-word-text-field');
 const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
+let victory = false;
+
+const handleKeyDown = async (event) => {
+    if (event.key === 's') {
+        await startOver();
+    }
+    if (event.key === 'n') {
+        await startNewGame();
+    }
+    if (event.key === 'h') {
+        await hintReminder();
+    }
+    if (event.key === 'r') {
+        await rootsReminder();
+    }
+    if (event.key === 'd') {
+
+        if (messageMousedOver) {
+            const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
+            const newQuestionsFromServer = await deleteQuestion(questionAnswerPairId);
+
+            questions.push(...newQuestionsFromServer);
+            newQuestionsFromServer.forEach((q) => processQuestion(q));
+
+            for (let i = messages.children.length - 1; i >= 0; i--) {
+                const otherQuestionAnswerPairId = messages.children[i].getAttribute('data-question-answer-pair-id');
+
+                if (questionAnswerPairId === otherQuestionAnswerPairId) {
+                    // console.log(`deleting ${questionAnswerPairId}`);
+                    messages.children[i].remove();
+                }
+            }
+        } else {
+            removeHint();
+        }
+    }
+    if (event.key == 'e') {
+        if (messageMousedOver) {
+            const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
+            const newQuestionsFromServer = await editQuestion(questionAnswerPairId);
+
+            questions.push(...newQuestionsFromServer);
+            newQuestionsFromServer.forEach((q) => processQuestion(q));
+
+            for (let i = messages.children.length - 1; i >= 0; i--) {
+                if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && messages.children[i].className == 'speech-bubble') {
+                    tc = messages.children[i].children[1].textContent;
+                    messages.children[i].children[1].textContent = tc === 'no' ? 'yes' : tc === 'yes' ? 'no' : tc;
+                }
+            }
+
+
+        }
+    }
+    if (event.key === 'g') {
+        event.preventDefault();
+        inputField.focus();
+    }
+    if (event.key === 'l') {
+        event.preventDefault();
+        leaderboardNameInput.focus();
+    }
+
+    if (event.key === 'Escape') {
+        exitHowToPlay();
+    }
+
+}
+
+
 
 function addToGrid(question, useThisRow, useThisColumn) {
 
@@ -241,11 +312,18 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
         window.location.href = 'index.html';
     }
 
+
     if (data.victory) {
-        await displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        if (victory) {
+            // if it guesses correctly multiple times, we get some weird behavior
+        } else {
+            victory = true; 
+            displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        }
     } else {
         return data.questions;
-    }    
+    } 
+
 }
 
 function formatTimeDelta(seconds) {
@@ -317,20 +395,45 @@ async function fetchLeaderboard() {
     document.body.innerHTML = '';
   
     const handleKeyDownOnVictoryPage = async (e) => {
-      if (e.key === 'n') {
-        location.reload();
-      }
+        if (e.key === 'n') {
+            location.reload();
+        } 
+        if (e.key === 'l') {
+            e.preventDefault();
+            leaderboardNameInput.focus();
+        }
     }
   
-    document.body.addEventListener('keydown', handleKeyDownOnVictoryPage);
-  
+    document.addEventListener('keydown', handleKeyDownOnVictoryPage);
+ 
     // Add the victory message, leaderboard, and submission widget to the body
     document.body.appendChild(victoryMessage);
     document.body.appendChild(leaderboardMessage);
     document.body.appendChild(leaderboardNameInput);
     document.body.appendChild(submitLeaderboardNameButton);
     document.body.appendChild(refreshMessage);
-  
+
+    document.removeEventListener('keydown', handleKeyDown);
+
+    leaderboardNameInput.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            await setLeaderboardName(true);
+        }
+        if (e.key === 'Escape') {
+            leaderboardNameInput.blur();
+        }
+    })
+
+    leaderboardNameInput.addEventListener('focus', () => {
+        document.removeEventListener('keydown', handleKeyDownOnVictoryPage);
+    });
+
+    leaderboardNameInput.addEventListener('blur', () => {
+        document.addEventListener('keydown', handleKeyDownOnVictoryPage);
+    });
+
+    leaderboardNameInput.focus();
+
     submitLeaderboardNameButton.addEventListener('click', async () => {
       const leaderboardName = leaderboardNameInput.value;
       if (leaderboardName) {
@@ -488,10 +591,16 @@ async function deleteQuestion(questionAnswerPairId) {
     const reason = data.reason;
 
     if (data.victory) {
-        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        if (victory) {
+            // if it guesses correctly multiple times, we get some weird behavior
+        } else {
+            victory = true; 
+            displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        }
     } else {
         return data.questions;
-    }    
+    } 
+
 }
 
 async function editQuestion(questionAnswerPairId) {
@@ -513,7 +622,12 @@ async function editQuestion(questionAnswerPairId) {
     const reason = data.reason;
 
     if (data.victory) {
-        displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        if (victory) {
+            // if it guesses correctly multiple times, we get some weird behavior
+        } else {
+            victory = true; 
+            displayVictoryMessage(data.goalWord, data.victoryTime, data.winningQuestion);
+        }
     } else {
         return data.questions;
     }    
@@ -748,73 +862,6 @@ function onLoad () {
     startNewGame();
     mousedOver = null;
    
-    const handleKeyDown = async (event) => {
-        if (event.key === 's') {
-            await startOver();
-        }
-        if (event.key === 'n') {
-            await startNewGame();
-        }
-        if (event.key === 'h') {
-            await hintReminder();
-        }
-        if (event.key === 'r') {
-            await rootsReminder();
-        }
-        if (event.key === 'd') {
-            
-            if (messageMousedOver) {
-                const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
-                const newQuestionsFromServer = await deleteQuestion(questionAnswerPairId);
-
-                questions.push(...newQuestionsFromServer);
-                newQuestionsFromServer.forEach((q) => processQuestion(q));
-
-                for (let i = messages.children.length - 1; i >= 0; i--) {
-                    const otherQuestionAnswerPairId = messages.children[i].getAttribute('data-question-answer-pair-id');
-                                
-                    if (questionAnswerPairId === otherQuestionAnswerPairId) {
-                        // console.log(`deleting ${questionAnswerPairId}`);
-                        messages.children[i].remove();
-                    }
-                }    
-            } else {
-                removeHint();
-            }
-        }
-        if (event.key == 'e') {
-            if (messageMousedOver) {
-                const questionAnswerPairId = messageMousedOver.getAttribute('data-question-answer-pair-id');
-                const newQuestionsFromServer = await editQuestion(questionAnswerPairId);
-
-                questions.push(...newQuestionsFromServer);
-                newQuestionsFromServer.forEach((q) => processQuestion(q) );
-
-                for (let i = messages.children.length - 1; i >= 0; i--) {
-                    if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && messages.children[i].className == 'speech-bubble') {
-                        tc = messages.children[i].children[1].textContent;
-                        messages.children[i].children[1].textContent = tc === 'no' ? 'yes' : tc === 'yes' ? 'no' : tc;
-                    }
-                }    
-
-
-            }
-        }
-        if (event.key === 'g') {
-            event.preventDefault();
-            inputField.focus();
-        }
-        if (event.key === 'l') {
-            event.preventDefault();
-            leaderboardNameInput.focus();
-        }
-
-        if (event.key === 'Escape') {
-            exitHowToPlay();
-        }
-
-    }
-
     document.addEventListener('keydown', handleKeyDown);
     const startNewGameButton = document.getElementById('start-new-game-btn');
     startNewGameButton.addEventListener('click', async () => {
@@ -825,8 +872,6 @@ function onLoad () {
         await startOver();
     });    
 
-    const inputField = document.getElementById('new-word-text-field');
-
     inputField.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
             await startNewGame();
@@ -836,15 +881,12 @@ function onLoad () {
         }
     })
 
-    // Add focus and blur event listeners to the input field
     inputField.addEventListener('focus', () => {
-    // Remove the keydown listener from the document when the input field is focused
-    document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('keydown', handleKeyDown);
     });
 
     inputField.addEventListener('blur', () => {
-    // Add the keydown listener back to the document when the input field is blurred 
-    document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keydown', handleKeyDown);
     });
 
     leaderboardNameInput.addEventListener('keydown', async (e) => {
@@ -924,7 +966,7 @@ if (localStorage.getItem('leaderboardName')) {
   leaderboardNameInput.value = localStorage.getItem('leaderboardName');
 }
 
-function setLeaderboardName() {
+function setLeaderboardName(reloadPage) {
     const leaderboardName = leaderboardNameInput.value;
     if (leaderboardName) {
         localStorage.setItem('leaderboardName', leaderboardName);
@@ -933,6 +975,7 @@ function setLeaderboardName() {
     } else {
         leaderboardNameDisplay.style.display = 'none';
     }
+    reloadPage && location.reload();
 }
 
 setLeaderboardNameButton.addEventListener('click', setLeaderboardName);
