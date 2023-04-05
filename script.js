@@ -222,6 +222,7 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
             password: localStorage.getItem('password'), 
             gameId, 
             questionAnswerPairId,
+            leaderboardName: localStorage.getItem('leaderboardName'),
         }),
     };
 
@@ -282,7 +283,7 @@ async function fetchLeaderboard() {
     let leaderboardContent = '<h3>Leaderboard</h3><ol>';
     for (let entry of leaderboardData) {
       const [goalWord, playerName, timeTaken] = entry;
-      leaderboardContent += `<li>${playerName} - ${goalWord} - ${formatTimeDelta(timeTaken)}</li>`;
+      leaderboardContent += `<li>${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}</li>`;
     }
     leaderboardContent += '</ol>';
   
@@ -478,6 +479,7 @@ async function deleteQuestion(questionAnswerPairId) {
             questionAnswerPairId,
             password: localStorage.getItem('password'),
             gameId,
+            leaderboardName: localStorage.getItem('leaderboardName'),
         }),
     };
 
@@ -501,6 +503,7 @@ async function editQuestion(questionAnswerPairId) {
             questionAnswerPairId,
             password: localStorage.getItem('password'),
             gameId,
+            leaderboardName: localStorage.getItem('leaderboardName'),
         }),
     };
 
@@ -872,3 +875,61 @@ function toggleHowToPlay(event) {
       howToPlayBtnText.textContent = 'How to play';
     }
   }
+
+// Add leaderboard name input widget
+const leaderboardNameWrapper = document.createElement('div');
+const leaderboardNameInput = document.createElement('input');
+const setLeaderboardNameButton = document.createElement('button');
+
+leaderboardNameWrapper.style.position = 'fixed';
+leaderboardNameWrapper.style.bottom = '80px';
+leaderboardNameWrapper.style.right = '20px';
+leaderboardNameWrapper.style.zIndex = '10';
+
+leaderboardNameInput.placeholder = 'Leaderboard name';
+leaderboardNameInput.style.display = 'inline-block';
+leaderboardNameInput.style.marginRight = '1em';
+
+setLeaderboardNameButton.textContent = 'Set Leaderboard Name';
+setLeaderboardNameButton.style.display = 'inline-block';
+
+leaderboardNameWrapper.appendChild(leaderboardNameInput);
+leaderboardNameWrapper.appendChild(setLeaderboardNameButton);
+document.body.insertBefore(leaderboardNameWrapper, document.body.firstChild);
+
+// Set default leaderboard name if it exists in local storage
+if (localStorage.getItem('leaderboardName')) {
+  leaderboardNameInput.value = localStorage.getItem('leaderboardName');
+}
+
+setLeaderboardNameButton.addEventListener('click', () => {
+  const leaderboardName = leaderboardNameInput.value;
+  if (leaderboardName) {
+    localStorage.setItem('leaderboardName', leaderboardName);
+  }
+});
+
+const leaderboardNameDisplay = document.createElement('span');
+
+if (localStorage.getItem('leaderboardName')) {
+  const leaderboardName = localStorage.getItem('leaderboardName');
+  leaderboardNameInput.value = leaderboardName;
+  leaderboardNameDisplay.textContent = `Your leaderboard name is: ${leaderboardName}`;
+  leaderboardNameDisplay.style.display = 'block';
+  leaderboardNameDisplay.style.marginTop = '1em';
+} else {
+  leaderboardNameDisplay.style.display = 'none';
+}
+
+leaderboardNameWrapper.appendChild(leaderboardNameDisplay);
+
+setLeaderboardNameButton.addEventListener('click', () => {
+  const leaderboardName = leaderboardNameInput.value;
+  if (leaderboardName) {
+    localStorage.setItem('leaderboardName', leaderboardName);
+    leaderboardNameDisplay.textContent = `Your leaderboard name is: ${leaderboardName}`;
+    leaderboardNameDisplay.style.display = 'block';
+  } else {
+    leaderboardNameDisplay.style.display = 'none';
+  }
+});
