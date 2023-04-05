@@ -98,6 +98,13 @@ function addMessage(message, isQuestion, questionAnswerPairId) {
         li.classList.add('question-bubble');
     }
 
+    // Check if the message is "A: yes" or "A: no" and add the appropriate class
+    if (!isQuestion && message.trim().toLowerCase() === "a: yes") {
+        li.classList.add('answer-yes');
+    } else if (!isQuestion && message.trim().toLowerCase() === "a: no") {
+        li.classList.add('answer-no');
+    }
+
     // Set the questionAnswerPairId as a data attribute
     li.setAttribute('data-question-answer-pair-id', questionAnswerPairId);
 
