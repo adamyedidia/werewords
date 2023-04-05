@@ -8,6 +8,7 @@ const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
 const goalWordTypeDisplay = document.getElementById('new-word-type');
 const inputField = document.getElementById('new-word-text-field');
+const timerDisplay = document.getElementById('timer-display');
 const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
 let victory = false;
 
@@ -123,6 +124,7 @@ let questions = [...startingQuestions];
 // questions.forEach(processQuestion)
 
 let goalWordDefinition = "";
+let goalWordTime = null;
 const goalWordDisplay = document.getElementById('goal-word-display');
 
 goalWordDisplay.addEventListener('mouseenter', () => {
@@ -140,13 +142,29 @@ let garbageHints = [];
 let gameId = null;
 let messageMousedOver = null;
 
+function formatTime(t) {
+    const minutes = Math.floor(t / 60);
+    const seconds = Math.floor(t % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function updateTimerDisplay() {
-    const timerDisplay = document.getElementById('timer-display');
     const currentTime = new Date();
     const elapsedTime = Math.floor((currentTime - startTime) / 1000);
-    const minutes = Math.floor(elapsedTime / 60);
-    const seconds = elapsedTime % 60;
-    timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    let best_time_string = goalWordTime ? ` (leaderboard: ${formatTime(goalWordTime)})` : '';
+
+    if (goalWordTime) {
+        if (elapsedTime < goalWordTime) {
+            timerDisplay.style.color = 'rgb(0, 200, 0)'
+        }
+        else {
+            timerDisplay.style.color = 'rgb(150, 0, 0)'
+        }
+    } else {
+        timerDisplay.style.color = 'rgb(0, 0, 0)'
+    }
+    
+    timerDisplay.textContent = formatTime(elapsedTime) + best_time_string;
 }
 
 function startTimer() {
@@ -681,6 +699,23 @@ async function getGoalWordDefinition(goalWord) {
     const data = await response.json();
     return data
 }
+
+async function getGoalWordTime(goalWord) {
+    // Remove this return to turn on the goal word time stuff
+    return null;
+    const body = JSON.stringify({ goalWord });
+    const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+    }
+    const response = await fetch(`${URL}/best_time`, requestOptions);
+    const data = await response.json();
+    return data
+}
+
+
 async function startNewGame() {
     try {  
         const customGoalWordField = document.getElementById('new-word-text-field');
@@ -718,6 +753,7 @@ async function startNewGame() {
 
       if (goalWord) {
         goalWordDefinition = await getGoalWordDefinition(goalWord);
+        goalWordTime = await getGoalWordTime(goalWord);
         goalWordDisplay.textContent = `The goal word is ${goalWord}`; 
         startTimer();
       }

@@ -1,3 +1,6 @@
+# Some logic requires that words only be in one category. 
+# Might get weird leaderboard behavior if that isn't true.
+
 # PDT words borrowed from http://www.persondothing.com/
 
 EASY_PDT_WORDS = [
