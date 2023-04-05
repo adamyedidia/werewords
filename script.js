@@ -893,7 +893,8 @@ function onLoad () {
 
     leaderboardNameInput.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter') {
-            await setLeaderboardName();
+            localStorage.setItem('leaderboardName', leaderboardNameInput.value);
+            location.reload();
         }
         if (e.key === 'Escape') {
             leaderboardNameInput.blur();
@@ -968,7 +969,7 @@ if (localStorage.getItem('leaderboardName')) {
   leaderboardNameInput.value = localStorage.getItem('leaderboardName');
 }
 
-function setLeaderboardName(reloadPage) {
+function setLeaderboardName() {
     const leaderboardName = leaderboardNameInput.value;
     if (leaderboardName) {
         localStorage.setItem('leaderboardName', leaderboardName);
@@ -977,7 +978,6 @@ function setLeaderboardName(reloadPage) {
     } else {
         leaderboardNameDisplay.style.display = 'none';
     }
-    reloadPage && location.reload();
 }
 
 setLeaderboardNameButton.addEventListener('click', setLeaderboardName);
