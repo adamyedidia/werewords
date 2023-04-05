@@ -842,6 +842,13 @@ function onLoad () {
     document.addEventListener('keydown', handleKeyDown);
     });
 
+    leaderboardNameInput.addEventListener('focus', () => {
+        document.removeEventListener('keydown', handleKeyDown);
+    });
+
+    leaderboardNameInput.addEventListener('blur', () => {
+        document.addEventListener('keydown', handleKeyDown);
+    });
 };
 
 window.addEventListener('load', onLoad);
@@ -933,3 +940,4 @@ setLeaderboardNameButton.addEventListener('click', () => {
     leaderboardNameDisplay.style.display = 'none';
   }
 });
+
