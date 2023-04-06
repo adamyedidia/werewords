@@ -1,5 +1,7 @@
-async function fetchLeaderboard() {
-    const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}`);
+let gameId = null;
+
+async function fetchLeaderboards(goalWord) {
+    const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}&goalWord=${goalWord}`);
     const leaderboardData = await response.json();
     return leaderboardData;
 }
@@ -8,19 +10,45 @@ const URL = CONFIG.URL;
 
 async function onLoad() {
     const leaderboardMessage = document.createElement('div');
-    const leaderboardData = await fetchLeaderboard();
 
-    let leaderboardContent = '<h3>Leaderboard</h3><ol>';
-    for (let entry of leaderboardData) {
-        const [goalWord, playerName, timeTaken] = entry;
-        leaderboardContent += `<li>${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}</li>`;
+    let goalWord = localStorage.getItem('goalWord') || '';
+    const { goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
+
+    let goalWordTypeContent = '<h3>Overall Leaderboard</h3><ol>';
+    for (let entry of goalWordTypeLeaderboard) {
+        const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
+        const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;
+        goalWordTypeContent += `<li${(leaderboardGameId === gameId) ? ' class="bold"' : ''}>${listItem}</li>`;
     }
-    leaderboardContent += '</ol>';
+    goalWordTypeContent += '</ol>';
 
-    leaderboardMessage.innerHTML = leaderboardContent;
+    let goalWordContent = `<h3>Leaderboard for ${goalWord}</h3><ol>`;
+    for (let entry of goalWordLeaderboard) {
+        const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
+        const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;
+        goalWordContent += `<li${(leaderboardGameId === gameId) ? ' class="bold"' : ''}>${listItem}</li>`;
+    }
+    goalWordContent += '</ol>';
+
+    const goalWordTypeContainer = document.createElement('div');
+    const goalWordContainer = document.createElement('div');
+
+    goalWordTypeContainer.innerHTML = goalWordTypeContent;
+    goalWordContainer.innerHTML = goalWordContent;
+
+    goalWordTypeContainer.style.width = '50%';
+    goalWordTypeContainer.style.display = 'inline-block';
+    goalWordTypeContainer.style.verticalAlign = 'top';
+    goalWordContainer.style.width = '50%';
+    goalWordContainer.style.display = 'inline-block';
+    goalWordContainer.style.verticalAlign = 'top';
+
+    leaderboardMessage.appendChild(goalWordTypeContainer);
+    leaderboardMessage.appendChild(goalWordContainer);
 
     document.body.innerHTML = '';
 
+    console.log(leaderboardMessage);
     document.body.appendChild(leaderboardMessage);
 }
 
