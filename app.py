@@ -64,7 +64,6 @@ word_type_to_words_list = {
 def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
     for k, v in word_type_to_words_list.items():
         if goal_word in v:
-            print(v)
             return k
     return None
     
