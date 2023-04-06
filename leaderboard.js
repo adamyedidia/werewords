@@ -4,8 +4,6 @@ const requestOptions = {
       headers: { 'Content-Type': 'application/json' }
 }
 
-URL = CONFIG.URL;
-
 async function fetchLeaderboards(goalWord) {
     const response = await fetch(`${URL}/leaderboard?goalWord=${goalWord}`, requestOptions);
     const leaderboardData = await response.json();
