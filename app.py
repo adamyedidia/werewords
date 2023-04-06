@@ -319,21 +319,13 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
 @app.route('/leaderboard')
 @api_endpoint
 def get_leaderboard_info():
-    raw_goal_word_type = request.args.get('goalWordType')
-
     goal_word = request.args.get('goalWord')
     # goal_word = request.args.get('goalWord')
 
     leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
     leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
 
-    try:
-        goal_word_type = GoalWordType(raw_goal_word_type)
-    except ValueError:
-        goal_word_type = None
-
-    if get_goal_word_type(goal_word) is None:
-        goal_word_type = None
+    goal_word_type = get_goal_word_type(goal_word)
 
     leaderboard_games_items = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).items()
 
