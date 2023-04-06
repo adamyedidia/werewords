@@ -344,8 +344,8 @@ def get_leaderboard_info():
 
     return _process_response({
         'goalWordType': goal_word_type.value if goal_word_type else 'custom',
-        'goalWordTypeLeaderboard': sorted(leaderboard_by_goal_word_type, key=lambda x: float(x[3]))[:50], 
-        'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))[:50]
+        'goalWordTypeLeaderboard': sorted(leaderboard_by_goal_word_type, key=lambda x: float(x[3]))[:20], 
+        'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))[:10]
     })
 
 
