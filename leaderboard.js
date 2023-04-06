@@ -1,5 +1,11 @@
+const requestOptions = {
+      method: 'GET',
+      mode: 'cors',
+      headers: { 'Content-Type': 'application/json' }
+}
+
 async function fetchLeaderboards(goalWord) {
-    const response = await fetch(`${URL}/leaderboard?goalWord=${goalWord}`);
+    const response = await fetch(`${URL}/leaderboard?goalWord=${goalWord}`, requestOptions);
     const leaderboardData = await response.json();
     return leaderboardData;
 }
