@@ -15,7 +15,7 @@ async function leaderboardElements(goalWord, gameId) {
     }
     goalWordTypeContent += '</ol>';
 
-    let goalWordContent = `<h3>Leaderboard for ${goalWord}</h3><ol>`;
+    let goalWordContent = `<h3>Leaderboard for "${goalWord}"</h3><ol>`;
     for (let entry of goalWordLeaderboard) {
         const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
         const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;
