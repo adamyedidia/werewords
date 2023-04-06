@@ -75,6 +75,20 @@
             transform: translateX(-50%);
             font-size: 1.5em;
         }
+        ol {
+            padding-left: 1.5em;
+            counter-reset: list-counter;
+            list-style-type: none;
+        }
+
+        ol li::before {
+            counter-increment: list-counter;
+            content: counter(list-counter) ". ";
+        } 
+        .bold, .bold::before {
+            font-weight: bold;
+        }        
+</style>
     </style>
     
     <meta charset="UTF-8">

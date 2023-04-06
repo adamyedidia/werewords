@@ -374,24 +374,33 @@ function formatTimeDelta(seconds) {
     return timeString;
 }
 
-async function fetchLeaderboard() {
-    const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}`);
+async function fetchLeaderboards(goalWord) {
+    const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}&goalWord=${goalWord}`);
     const leaderboardData = await response.json();
     return leaderboardData;
   }
 
   async function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     // Fetch leaderboard data
-    const leaderboardData = await fetchLeaderboard();
+    const { goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
   
     // Generate leaderboard content
-    let leaderboardContent = '<h3>Leaderboard</h3><ol>';
-    for (let entry of leaderboardData) {
-      const [goalWord, playerName, timeTaken] = entry;
-      leaderboardContent += `<li>${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}</li>`;
+    let goalWordTypeContent = '<h3>Overall Leaderboard</h3><ol>';
+    for (let entry of goalWordTypeLeaderboard) {
+        const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
+        const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;
+        goalWordTypeContent += `<li${(leaderboardGameId === gameId) ? ' class="bold"' : ''}>${listItem}</li>`;
     }
-    leaderboardContent += '</ol>';
-  
+    goalWordTypeContent += '</ol>';
+
+    let goalWordContent = `<h3>Leaderboard for ${goalWord}</h3><ol>`;
+    for (let entry of goalWordLeaderboard) {
+        const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
+        const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;
+        goalWordContent += `<li${(leaderboardGameId === gameId) ? ' class="bold"' : ''}>${listItem}</li>`;
+    }
+    goalWordContent += '</ol>';
+
     const victoryMessage = document.createElement('div');
     const leaderboardMessage = document.createElement('div');
     const refreshMessage = document.createElement('div');
@@ -410,7 +419,27 @@ async function fetchLeaderboard() {
     }
 
     victoryMessage.innerHTML = `You win! You got to the word <strong>${goalWord}</strong> in <strong>${formatTimeDelta(victoryTime)}</strong>. You won when ChatGPT asked: ${winningQuestion} `;
-    leaderboardMessage.innerHTML = leaderboardContent;
+
+    // Create containers for the two leaderboards
+    const goalWordTypeContainer = document.createElement('div');
+    const goalWordContainer = document.createElement('div');
+
+    // Set the innerHTML for the containers
+    goalWordTypeContainer.innerHTML = goalWordTypeContent;
+    goalWordContainer.innerHTML = goalWordContent;
+
+    // Style the containers
+    goalWordTypeContainer.style.width = '50%';
+    goalWordTypeContainer.style.display = 'inline-block';
+    goalWordTypeContainer.style.verticalAlign = 'top';
+    goalWordContainer.style.width = '50%';
+    goalWordContainer.style.display = 'inline-block';
+    goalWordContainer.style.verticalAlign = 'top';
+
+    // Add containers to the leaderboard message
+    leaderboardMessage.appendChild(goalWordTypeContainer);
+    leaderboardMessage.appendChild(goalWordContainer);
+
     refreshMessage.innerHTML = `(n to restart)`;
   
     victoryMessage.style.fontSize = '2em';
@@ -494,6 +523,7 @@ async function fetchLeaderboard() {
 
     submitLeaderboardNameButton.addEventListener('click', submitLeaderboardName);
 }
+
 function generateRandomURLSafeString(bits) {
     const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
     const charsInUrlSafeString = Math.ceil(bits / 6);

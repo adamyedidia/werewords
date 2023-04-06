@@ -321,6 +321,8 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
 @api_endpoint
 def get_leaderboard_info():
     raw_goal_word_type = request.args.get('goalWordType')
+
+    goal_word = request.args.get('goalWord')
     # goal_word = request.args.get('goalWord')
 
     leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
@@ -331,18 +333,23 @@ def get_leaderboard_info():
     except ValueError:
         goal_word_type = None
 
+    if get_goal_word_type(goal_word) is None:
+        goal_word_type = None
+
     leaderboard_games_items = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).items()
 
-    return_list = []
+    leaderboard_by_goal_word_type = []
+
     for key, value in leaderboard_games_items:
         if not value:
             continue
-        sorted_value = sorted(value, key=lambda x: x[1])
-        return_list.append([key, leaderboard_names.get(sorted_value[0][0]), sorted_value[0][1]])
+        sorted_value = sorted(value, key=lambda x: float(x[1]))
+        leaderboard_by_goal_word_type.append([key, sorted_value[0][0], leaderboard_names.get(sorted_value[0][0]), sorted_value[0][1]])
 
-    print(return_list)
+    leaderboard_by_goal_word = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).get(goal_word) or []
+    leaderboard_by_goal_word = [[goal_word, result[0], leaderboard_names.get(result[0]), result[1]] for result in leaderboard_by_goal_word]
 
-    return sorted(return_list, key=lambda x: float(x[2]))
+    return _process_response({'goalWordTypeLeaderboard': sorted(leaderboard_by_goal_word_type, key=lambda x: float(x[3])), 'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))})
 
 @app.route('/best_time', methods=['POST', 'OPTIONS'])
 @cross_origin()
