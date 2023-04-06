@@ -58,13 +58,19 @@ const handleKeyDown = async (event) => {
             newQuestionsFromServer.forEach((q) => processQuestion(q));
 
             for (let i = messages.children.length - 1; i >= 0; i--) {
-                if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id') && ['speech-bubble answer-yes', 'speech-bubble answer-no'].includes(messages.children[i].className)) {
-                    tc = messages.children[i].children[1].textContent;
-                    messages.children[i].children[1].textContent = tc === 'no' ? 'yes' : tc === 'yes' ? 'no' : tc;
+                if (questionAnswerPairId === messages.children[i].getAttribute('data-question-answer-pair-id')) {
+                    curr = messages.children[i];
+                    c = curr.className;
+                    tc = curr.children[1].textContent;
+                    if (c === 'speech-bubble answer-yes' && tc === 'yes') {
+                        curr.children[1].textContent = 'no';
+                        curr.className = 'speech-bubble answer-no';
+                    } else if (c === 'speech-bubble answer-no' && tc === 'no') {
+                        curr.children[1].textContent = 'yes';
+                        curr.className = 'speech-bubble answer-yes';
+                    }
                 }
             }
-
-
         }
     }
     if (event.key === 'g') {
