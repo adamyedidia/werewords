@@ -1,5 +1,5 @@
 async function fetchLeaderboards(goalWord) {
-    const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}&goalWord=${goalWord}`);
+    const response = await fetch(`${URL}/leaderboard?goalWord=${goalWord}`);
     const leaderboardData = await response.json();
     return leaderboardData;
 }
