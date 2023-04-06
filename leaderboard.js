@@ -1,17 +1,10 @@
-let gameId = null;
-
 async function fetchLeaderboards(goalWord) {
     const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}&goalWord=${goalWord}`);
     const leaderboardData = await response.json();
     return leaderboardData;
 }
 
-const URL = CONFIG.URL;
-
-async function onLoad() {
-    const leaderboardMessage = document.createElement('div');
-
-    let goalWord = localStorage.getItem('goalWord') || '';
+async function leaderboardElements(goalWord, gameId) {
     const { goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
 
     let goalWordTypeContent = '<h3>Overall Leaderboard</h3><ol>';
@@ -43,13 +36,5 @@ async function onLoad() {
     goalWordContainer.style.display = 'inline-block';
     goalWordContainer.style.verticalAlign = 'top';
 
-    leaderboardMessage.appendChild(goalWordTypeContainer);
-    leaderboardMessage.appendChild(goalWordContainer);
-
-    document.body.innerHTML = '';
-
-    console.log(leaderboardMessage);
-    document.body.appendChild(leaderboardMessage);
+    return [goalWordTypeContainer, goalWordContainer];
 }
-
-window.addEventListener('load', onLoad);
