@@ -5,7 +5,7 @@ async function fetchLeaderboards(goalWord) {
 }
 
 async function leaderboardElements(goalWord, gameId) {
-    const { goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
+    const { goalWordType, goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
 
     let goalWordTypeContent = `<h3>${capitalizeWords(goalWordType)} Words Leaderboard</h3><ol>`;
     for (let entry of goalWordTypeLeaderboard) {
