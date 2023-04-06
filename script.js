@@ -374,6 +374,17 @@ function formatTimeDelta(seconds) {
     return timeString;
 }
 
+function capitalizeWords(str) {
+    if (!str || typeof str !== 'string') {
+      return '';
+    }
+  
+    return str
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
 async function fetchLeaderboards(goalWord) {
     const response = await fetch(`${URL}/leaderboard?goalWordType=${localStorage.getItem('goalWordType')}&goalWord=${goalWord}`);
     const leaderboardData = await response.json();
@@ -382,10 +393,10 @@ async function fetchLeaderboards(goalWord) {
 
   async function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
     // Fetch leaderboard data
-    const { goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
+    const { goalWordType, goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
   
     // Generate leaderboard content
-    let goalWordTypeContent = '<h3>Overall Leaderboard</h3><ol>';
+    let goalWordTypeContent = `<h3>${capitalizeWords(goalWordType)} Words Leaderboard</h3><ol>`;
     for (let entry of goalWordTypeLeaderboard) {
         const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
         const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;
@@ -393,7 +404,7 @@ async function fetchLeaderboards(goalWord) {
     }
     goalWordTypeContent += '</ol>';
 
-    let goalWordContent = `<h3>Leaderboard for ${goalWord}</h3><ol>`;
+    let goalWordContent = `<h3>Leaderboard for "${goalWord}"</h3><ol>`;
     for (let entry of goalWordLeaderboard) {
         const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
         const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;

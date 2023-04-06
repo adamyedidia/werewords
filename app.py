@@ -348,7 +348,12 @@ def get_leaderboard_info():
     leaderboard_by_goal_word = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).get(goal_word) or []
     leaderboard_by_goal_word = [[goal_word, result[0], leaderboard_names.get(result[0]), result[1]] for result in leaderboard_by_goal_word]
 
-    return _process_response({'goalWordTypeLeaderboard': sorted(leaderboard_by_goal_word_type, key=lambda x: float(x[3])), 'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))})
+    return _process_response({
+        'goalWordType': goal_word_type.value if goal_word_type else 'custom',
+        'goalWordTypeLeaderboard': sorted(leaderboard_by_goal_word_type, key=lambda x: float(x[3])), 
+        'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))
+    })
+
 
 @app.route('/best_time', methods=['POST', 'OPTIONS'])
 @cross_origin()
