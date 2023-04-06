@@ -1,5 +1,5 @@
-const goalWordInput = document.getElementById('goalWordInput');
-const submitGoalWord = document.getElementById('submitGoalWord');
+const goalWordInput = document.getElementById('goal-word-input');
+const submitGoalWord = document.getElementById('submit-goal-word');
 let goalWord = '';
 let gameId = '123';
 
