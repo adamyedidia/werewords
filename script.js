@@ -974,6 +974,7 @@ function toggleHowToPlay(event) {
 const leaderboardNameWrapper = document.createElement('div');
 const leaderboardNameInput = document.createElement('input');
 const setLeaderboardNameButton = document.createElement('button');
+const toLeaderboardPage = document.createElement('button');
 
 leaderboardNameWrapper.style.position = 'fixed';
 leaderboardNameWrapper.style.bottom = '80px';
@@ -986,9 +987,16 @@ leaderboardNameInput.style.marginRight = '1em';
 
 setLeaderboardNameButton.textContent = 'Set Leaderboard Name';
 setLeaderboardNameButton.style.display = 'inline-block';
+setLeaderboardNameButton.style.marginRight = '1em';
+
+
+toLeaderboardPage.textContent = 'Leaderboard page';
+toLeaderboardPage.style.display = 'inline-block';
 
 leaderboardNameWrapper.appendChild(leaderboardNameInput);
 leaderboardNameWrapper.appendChild(setLeaderboardNameButton);
+leaderboardNameWrapper.appendChild(toLeaderboardPage);
+
 document.body.insertBefore(leaderboardNameWrapper, document.body.firstChild);
 
 // Set default leaderboard name if it exists in local storage
@@ -1008,6 +1016,7 @@ function setLeaderboardName() {
 }
 
 setLeaderboardNameButton.addEventListener('click', setLeaderboardName);
+toLeaderboardPage.addEventListener('click', () => { window.location.href = 'leaderboard_page.html' });
 
 const leaderboardNameDisplay = document.createElement('span');
 
