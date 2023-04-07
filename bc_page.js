@@ -27,7 +27,7 @@ async function getFunctions() {
 }
 
 async function handleSubmitBc() {
-    let answer = await evaluate(bcInput.value);
+    let answer = bcInput.value === '' ? '' : await evaluate(bcInput.value);
     if (answer === 'parse failure') {
         bcAnswer.style.color = 'red';
     } else {
@@ -45,16 +45,30 @@ bcInput.addEventListener('keydown', (event) => {
 async function onLoad() {
     let functions = await getFunctions();   
     
-    let functionsContent = `<h3>Functions</h3><ol>`;
+    let functionsContent = `<h3>Functions</h3>`;
+    let functionsExamplesContent = `<h3>Examples</h3>`;
 
-    functions.forEach(f => {
-        functionsContent += `<ul>${f}</ul>`;
-    });
+    for (let f in functions) {
+        functionsContent += `<ul>${f}</ul>`
+        functionsExamplesContent += `<ul>${functions[f]}</ul>`
+    }
 
     const functionsContainer = document.createElement('div');
+    const functionsExamplesContainer = document.createElement('div');
+
+    functionsContainer.style.width = '25%';
+    functionsContainer.style.display = 'inline-block';
+    functionsContainer.style.verticalAlign = 'top';
+    functionsExamplesContainer.style.width = '25%';
+    functionsExamplesContainer.style.display = 'inline-block';
+    functionsExamplesContainer.style.verticalAlign = 'top';
+
+
     functionsContainer.innerHTML = functionsContent;
+    functionsExamplesContainer.innerHTML = functionsExamplesContent;
 
     document.body.appendChild(functionsContainer);
+    document.body.appendChild(functionsExamplesContainer);
 
     bcInput.focus();
 }

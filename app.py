@@ -553,7 +553,7 @@ def evaluate_bc():
 @app.route("/bc/functions", methods=['POST','OPTIONS'])
 @cross_origin()
 def get_bc_functions():
-    return _process_response(list(bc_functions()))
+    return _process_response(bc_functions())
 
 # Start the server
 if __name__ == '__main__':
