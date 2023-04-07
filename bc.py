@@ -1,8 +1,8 @@
 import random
 
 d = {
-        '_times': (lambda x, y: x * y, '[2|3] = 6'),
-        '_plus': (lambda x, y: x + y, '[2:3] = 5'),
+        '_anonymous_times': (lambda x, y: x * y, '[2|3] = 6'),
+        '_anonymous_plus': (lambda x, y: x + y, '[2:3] = 5'),
         'div': (lambda x, y: x / y, 'div[2:3] = 2/3'),
         'pow': (lambda x, y: x ** y, 'pow[2:3] = 9'),
         'equal': (lambda x, y: 1 if x == y else 0, 'equal[2:2] = 1'),
@@ -28,9 +28,9 @@ def splitIntoArgs(s):
         elif s[i] == '|' and count_parentheses == 1:
             if arg:
                 raise('| used as argument delimiter?')
-            return ['_times', s[1:i], s[i+1:-1]]
+            return ['_anonymous_times', s[1:i], s[i+1:-1]]
         elif s[i] == ':' and count_parentheses == 1:
-            return [arg if arg else '_plus', s[1:i], s[i+1:-1]]
+            return [arg if arg else '_anonymous_plus', s[1:i], s[i+1:-1]]
 
 def bc(s):
     v = None
