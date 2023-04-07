@@ -540,14 +540,10 @@ def present_leaderboard_name():
 def evaluate_bc():
     code = request.json.get('bc')
 
-    ret = None
-
     try:
-        ret = bc(code)
+        return _process_response(bc(code))
     except:
         return _process_response('parse failure')
-    
-    return _process_response(ret)
 
 
 @app.route("/bc/functions", methods=['POST','OPTIONS'])
