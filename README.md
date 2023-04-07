@@ -15,3 +15,9 @@ LOCAL = True
 ```
 
 To deploy, run "deploy" on the box
+
+To lowercase all the quoted words in words.py, you can do     
+
+```
+sed -i 's/".*[A-Z]/\L&/g' words.py
+```
