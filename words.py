@@ -3,7 +3,20 @@
 
 # PDT words borrowed from http://www.persondothing.com/
 
-TEST = ['test' + str(i) for i in range(1000)]
+TEST = [
+"is",
+"it",
+"a",
+"living",
+"thing",
+"an",
+"animal",
+"object",
+"noun",
+"verb",
+"adjective",
+"action"
+]
 
 EASY_PDT_WORDS = [
 "object",
