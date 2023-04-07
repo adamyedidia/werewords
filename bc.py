@@ -1,9 +1,21 @@
 import random
 import time
 
+def add(*nums):
+    ret = 0
+    for num in nums:
+        ret += num
+    return ret
+
+def prod(*nums):
+    ret = 1
+    for num in nums:
+        ret *= num
+    return ret
+
 d = {
-        '_anonymous_times': (lambda x, y: x * y, '[2|3] = 6'),
-        '_anonymous_plus': (lambda x, y: x + y, '[2:3] = 5'),
+        '_anonymous_times': (prod, '[2|3] = 6'),
+        '_anonymous_plus': (add, '[2:3] = 5'),
         'div': (lambda x, y: x / y, 'div[2:3] = 2/3'),
         'pow': (lambda x, y: x ** y, 'pow[2:3] = 9'),
         'equal': (lambda x, y: 1 if x == y else 0, 'equal[2:2] = 1'),
@@ -34,7 +46,7 @@ def splitIntoArgs(s):
         elif s[i] == ']':
             count_parentheses -= 1
         elif s[i] == '|' and count_parentheses == 1:
-            if arg:
+            if arg and arg != '_anonymous_times':
                 raise(Exception('| used as argument delimiter?'))
             ret.append(s[j:i])
             j = i + 1
