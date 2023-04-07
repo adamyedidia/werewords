@@ -26,13 +26,15 @@ async function getFunctions() {
     return await response.json();
 }
 
+function isNumeric(str) {
+  var regex = /^[0-9.]+$/;
+  
+  return regex.test(str);
+}
+
 async function handleSubmitBc() {
     let answer = bcInput.value === '' ? '' : await evaluate(bcInput.value);
-    if (answer === 'parse failure') {
-        bcAnswer.style.color = 'red';
-    } else {
-        bcAnswer.style.color = 'black';
-    }
+    bcAnswer.style.color = isNumeric(answer) ? 'black' : 'red';
     bcAnswer.textContent = answer;
 }
 

@@ -542,8 +542,8 @@ def evaluate_bc():
 
     try:
         return _process_response(bc(code))
-    except:
-        return _process_response('parse failure')
+    except Exception as e:
+        return _process_response(str(e))
 
 
 @app.route("/bc/functions", methods=['POST','OPTIONS'])
