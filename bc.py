@@ -52,9 +52,12 @@ def splitIntoArgs(s):
             j = i + 1
             arg = '_anonymous_times'
         elif s[i] == ':' and count_parentheses == 1:
+            if arg == '_anonymous_times':
+                raise(Exception("mixing '|' and ':'"))
             ret.append(s[j:i])
             j = i + 1
-    return [arg if arg else '_anonymous_plus', ret + [s[j:-1]]]
+            arg = arg if arg else '_anonymous_plus'
+    return [arg, ret + [s[j:-1]]]
 
 def bc(s):
     v = None
@@ -65,6 +68,8 @@ def bc(s):
     if v is not None:
         return v
     f, args = splitIntoArgs(s)
+    if f not in d:
+        raise(Exception(f'unknown function {f}'))
     return d[f][0](*[bc(x) for x in args])
 
 def bc_functions():
