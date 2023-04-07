@@ -354,7 +354,7 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
 }
 
   async function displayVictoryMessage(goalWord, victoryTime, winningQuestion) {
-    let [goalWordTypeContainer, goalWordContainer] = await leaderboardElements(goalWord, gameId);  
+    let [goalWordTypeContainer, goalWordContainer] = await leaderboardElements(goalWord, null, gameId);  
     
     const victoryMessage = document.createElement('div');
     const leaderboardMessage = document.createElement('div');
