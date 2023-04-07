@@ -2,15 +2,19 @@ const leaderboardTitle = document.getElementById('leaderboard-page-title');
 const goalWordInput = document.getElementById('goal-word-input');
 const submitGoalWord = document.getElementById('submit-goal-word');
 const toGamePage = document.getElementById('to-game-page');
+const goalWordTypeDisplay = document.getElementById('leaderboard-word-type');
 let leaderboardMessage = document.createElement('div');
 let goalWord = '';
-let gameId = '123';
 
 URL = CONFIG.URL;
 
+if (localStorage.getItem('goalWordType')) {
+    goalWordTypeDisplay.value = localStorage.getItem('goalWordType'); 
+}
+
 function handleSubmitGoalWord() {
     goalWord = goalWordInput.value;
-    if (!goalWord) { return }
+    goalWordType = goalWordTypeDisplay.value;
     displayLeaderboard();
 }
 
@@ -27,7 +31,7 @@ goalWordInput.addEventListener('keydown', (event) => {
 });
 
 async function displayLeaderboard() {
-    let [goalWordTypeContainer, goalWordContainer] = await leaderboardElements(goalWord, gameId);
+    let [goalWordTypeContainer, goalWordContainer] = await leaderboardElements(goalWord, goalWordType);
 
     while (leaderboardMessage.firstChild) {
         leaderboardMessage.removeChild(leaderboardMessage.firstChild)
@@ -55,6 +59,5 @@ goalWordInput.addEventListener('focus', () => {
 goalWordInput.addEventListener('blur', () => {
     document.addEventListener('keydown', handleKeyDown);
 });
-
 
 window.addEventListener('load', goalWordInput.focus());

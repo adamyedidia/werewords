@@ -327,7 +327,13 @@ def get_leaderboard_info():
     leaderboard_games = json.loads(rget('leaderboard_games', game_id=None) or '{}')
     leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
 
-    goal_word_type = get_goal_word_type(goal_word)
+    if not goal_word:
+        try:
+            goal_word_type = GoalWordType(request.args.get('goalWordType'))
+        except:
+            return _process_response('Invalid goal word type')
+    else:
+        goal_word_type = get_goal_word_type(goal_word)
 
     leaderboard_games_items = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).items()
 
@@ -338,14 +344,14 @@ def get_leaderboard_info():
             continue
         sorted_value = sorted(value, key=lambda x: float(x[1]))
         leaderboard_by_goal_word_type.append([key, sorted_value[0][0], leaderboard_names.get(sorted_value[0][0]), sorted_value[0][1]])
-
-    leaderboard_by_goal_word = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).get(goal_word) or []
-    leaderboard_by_goal_word = [[goal_word, result[0], leaderboard_names.get(result[0]), result[1]] for result in leaderboard_by_goal_word]
+    if goal_word:
+        leaderboard_by_goal_word = (leaderboard_games.get(goal_word_type.value if goal_word_type else '') or {}).get(goal_word) or []
+        leaderboard_by_goal_word = [[goal_word, result[0], leaderboard_names.get(result[0]), result[1]] for result in leaderboard_by_goal_word]
 
     return _process_response({
         'goalWordType': goal_word_type.value if goal_word_type else 'custom',
         'goalWordTypeLeaderboard': sorted(leaderboard_by_goal_word_type, key=lambda x: float(x[3]))[:20], 
-        'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))[:10]
+        'goalWordLeaderboard': sorted(leaderboard_by_goal_word, key=lambda x: float(x[3]))[:10] if goal_word else []
     })
 
 

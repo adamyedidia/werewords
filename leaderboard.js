@@ -4,14 +4,17 @@ const requestOptions = {
       headers: { 'Content-Type': 'application/json' }
 }
 
-async function fetchLeaderboards(goalWord) {
-    const response = await fetch(`${URL}/leaderboard?goalWord=${goalWord}`, requestOptions);
+async function fetchLeaderboards(goalWord, leaderboardType) {
+    let target = `${URL}/leaderboard?${goalWord ? 'goalWord' : 'goalWordType'}=${goalWord ? goalWord : leaderboardType}`;
+    const response = await fetch(target, requestOptions);
     const leaderboardData = await response.json();
     return leaderboardData;
 }
 
-async function leaderboardElements(goalWord, gameId) {
-    const { goalWordType, goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord);
+// Passing no goal word and a leaderboard type lets you get a leaderboard without having a specific word in mind
+async function leaderboardElements(goalWord, leaderboardType, gameId) {
+    gameId = gameId ? gameId : 'not a real game id';
+    const { goalWordType, goalWordTypeLeaderboard, goalWordLeaderboard } = await fetchLeaderboards(goalWord, leaderboardType);
 
     let goalWordTypeContent = `<h3>${capitalizeWords(goalWordType)} Words Leaderboard</h3><ol>`;
     for (let entry of goalWordTypeLeaderboard) {
@@ -21,7 +24,7 @@ async function leaderboardElements(goalWord, gameId) {
     }
     goalWordTypeContent += '</ol>';
 
-    let goalWordContent = `<h3>Leaderboard for "${goalWord}"</h3><ol>`;
+    let goalWordContent = goalWord ? `<h3>Leaderboard for "${goalWord}"</h3><ol>` : '';
     for (let entry of goalWordLeaderboard) {
         const [goalWord, leaderboardGameId, playerName, timeTaken] = entry;
         const listItem = `${playerName || 'Anonymous'} - ${goalWord} - ${formatTimeDelta(timeTaken)}`;

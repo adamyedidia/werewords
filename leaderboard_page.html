@@ -8,8 +8,22 @@
 </head>
 <body>
      <div class="goal-word-prompt">
-        <h1 id="leaderboard-page-title">Leaderboard</h1>
-        <input id="goal-word-input" placeholder="Input goal word">
+        <h1 id="leaderboard-page-title">Leaderboard</h1> 
+        <h3 id="leaderboard-instructions">Fill in box for word. Leave empty for category.</h3>
+        <input id="goal-word-input">
+        <select id="leaderboard-word-type">
+            <option value="" selected disabled>category</option>
+            <option value="easy">easy</option>
+            <option value="medium">medium</option>
+            <option value="hard">hard</option>
+            <option value="hard math">hard math</option>
+            <option value="very hard">very hard</option>
+            <option value="howitzer">howitzer</option>
+            <option value="tulle">tulle</option>
+            <option value="us">american</option>
+            <option value="uk">british</option>
+            <option value="characters">characters</option>
+        </select>
         <button id="submit-goal-word">Submit</button>
         <button id="to-game-page">Back to game page</button>
     </div>
