@@ -3,6 +3,8 @@
 
 # PDT words borrowed from http://www.persondothing.com/
 
+TEST = ['test' + str(i) for i in range(1000)]
+
 EASY_PDT_WORDS = [
 "object",
 "bat",
