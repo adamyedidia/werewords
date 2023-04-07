@@ -17,6 +17,7 @@ from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
 from functools import wraps
 from threading import Lock
+from bc import bc, bc_functions
 
 app = Flask(__name__)
 CORS(app)
@@ -534,6 +535,25 @@ def present_leaderboard_name():
 
     return _process_response({'success': True})
 
+@app.route("/bc", methods=['POST','OPTIONS'])
+@cross_origin()
+def evaluate_bc():
+    code = request.json.get('bc')
+
+    ret = None
+
+    try:
+        ret = bc(code)
+    except:
+        return _process_response('parse failure')
+    
+    return _process_response(ret)
+
+
+@app.route("/bc/functions", methods=['POST','OPTIONS'])
+@cross_origin()
+def get_bc_functions():
+    return _process_response(list(bc_functions()))
 
 # Start the server
 if __name__ == '__main__':
