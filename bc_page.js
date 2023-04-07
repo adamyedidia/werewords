@@ -45,8 +45,8 @@ bcInput.addEventListener('keydown', (event) => {
 async function onLoad() {
     let functions = await getFunctions();   
     
-    let functionsContent = `<h3>Functions</h3>`;
-    let functionsExamplesContent = `<h3>Examples</h3>`;
+    let functionsContent = `<h3>Function</h3>`;
+    let functionsExamplesContent = `<h3>Example</h3>`;
 
     for (let f in functions) {
         functionsContent += `<ul>${f}</ul>`
