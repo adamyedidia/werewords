@@ -65,12 +65,21 @@
             position: fixed;
             top: 10px;
             left: 50%;
+            text-align: center;
             transform: translateX(-50%);
             font-size: 2em;
         }
+        #seed-display {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            text-align: center;
+            transform: translateX(-50%);
+            font-size: 1em;
+        }
         #timer-display {
             position: fixed;
-            top: 50px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 1.5em;
@@ -97,8 +106,9 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h2 id="goal-word-display" style="font-size: 2em; z-index: 2" title=""></h2>
-    <h3 id="timer-display" style="font-size: 1.5em;"></h3>
+    <h2 id="goal-word-display" style="font-size: 2em; z-index: 2; text-align: center" title=""></h2>
+    <h3 id="seed-display" style="font-size: 1em; text-align: center"></h3>
+    <h4 id="timer-display" style="font-size: 1.5em;"></h4>
     <div class="container">
         <div class="messages-widget">
             <ul id="messages"></ul>

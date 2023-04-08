@@ -65,9 +65,12 @@ word_type_to_words_list = {
     GoalWordType.UK: UK,
     GoalWordType.CHARACTERS: CHARACTER_WORDS,
     GoalWordType.VINTAGE: BANNED_VINTAGE_CARDS,
-
 }
 
+
+word_type_to_seed_message = {
+    # GoalWordType.VINTAGE: "I'm thinking of a Magic: the Gathering card",
+}
 
 def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
     for k, v in word_type_to_words_list.items():
@@ -249,11 +252,22 @@ def make_word_into_hint():
         'meaningHints': json.loads(rget('meaning_hints', game_id=game_id) or '[]')
     })
 
+# For api costs, don't send all messages always, at most 20 pairs of Qs/As
+def get_relevant_messages(messages):
+    return messages if len(messages) < 40 else [*messages[:10], *[messages[-30:]]]
 
-def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> str:
+def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> str:    
     if not compare_digest(request.json.get('password') or '', PASSWORD):
         return _process_response(_failure_response('Wrong password'))
-    
+
+    goal_word = rget('goal_word', game_id=game_id)
+
+    goal_word_type = get_goal_word_type(goal_word)
+
+    seed = word_type_to_seed_message.get(goal_word_type)
+
+    seed_messages = [{"role": "user", "content": seed}] if seed else []
+
     messages_for_openai = [
                 {"role": "system", "content": "You are a player in a fun game."},
                 {"role": "user", "content": (
@@ -265,9 +279,10 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
                 },
                 {"role": "assistant", "content": "Sounds fun! Let's play. Have you thought of a word?"},
                 {"role": "user", "content": f"Yes, please go ahead and start! Please ask me a question about my word!"},
-                *[message[1] for message in [*messages[:10], *messages[-30:]]],
+                *seed_messages,
+                *[message[1] for message in get_relevant_messages(messages)],
             ]
-    
+
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=messages_for_openai,
@@ -276,8 +291,6 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
     )
 
     new_questions = [choice['message']['content'] for choice in response['choices']]
-
-    goal_word = rget('goal_word', game_id=game_id)
 
     victory = False
     victory_time = None
@@ -518,13 +531,25 @@ def definition():
     word = request.json.get('word')
     url = f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}'
 
-    definition = "failed to get definition :("
+    definition = "Failed to get definition"
     try:
         response = requests.get(url).json()[0]
         definition = response['meanings'][0]['definitions'][0]['definition']
     except:
         print(f'failed to get definition for {word}')
     return _process_response(definition)
+
+@app.route('/seed_messages', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def get_seed_message():
+    has_seed = False    
+    try:
+        seed_message = word_type_to_seed_message.get(get_goal_word_type(request.json.get('goalWord')))
+        seed_message, has_seed = (seed_message, True) if seed_message else ('No seed message', False)
+        return _process_response([has_seed, seed_message])
+    except:
+        return _process_response([False, 'Failed to get seed message']) 
+
 
 @app.route("/leaderboard_names", methods=['POST', 'OPTIONS'])
 @api_endpoint

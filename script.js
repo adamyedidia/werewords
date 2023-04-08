@@ -131,10 +131,14 @@ let questions = [...startingQuestions];
 
 let goalWordDefinition = "";
 let goalWordTime = null;
+let goalWordSeed = null;
+let hasGoalWordSeed = false;
 const goalWordDisplay = document.getElementById('goal-word-display');
+const seedDisplay = document.getElementById('seed-display');
 
 goalWordDisplay.addEventListener('mouseenter', () => {
-    goalWordDisplay.title = goalWordDefinition;
+    
+    goalWordDisplay.title = `Disclaimer: Random free dictionary api. Often dubious. \n \n${goalWordDefinition}`;
 });
 
 const URL = CONFIG.URL;
@@ -395,7 +399,6 @@ async function getNewQuestions(newQuestion, answer, questionAnswerPairId) {
   
     const handleKeyDownOnVictoryPage = async (e) => {
         if (e.ctrlKey) {
-            console.log(e.ctrlKey);
             return
         }
         if (e.key === 'n') {
@@ -691,6 +694,18 @@ async function getGoalWordTime(goalWord) {
     return data
 }
 
+async function getGoalWordSeed(goalWord) {
+    const body = JSON.stringify({ goalWord });
+    const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+    }
+    const response = await fetch(`${URL}/seed_messages`, requestOptions);
+    const data = await response.json();
+    return data
+}
 
 async function startNewGame() {
     try {  
@@ -730,7 +745,9 @@ async function startNewGame() {
       if (goalWord) {
         goalWordDefinition = await getGoalWordDefinition(goalWord);
         goalWordTime = await getGoalWordTime(goalWord);
-        goalWordDisplay.textContent = `The goal word is ${goalWord}`; 
+        [hasGoalWordSeed, goalWordSeed] = await getGoalWordSeed(goalWord);
+        goalWordDisplay.textContent = `The goal word is ${goalWord}`;
+        seedDisplay.textContent = hasGoalWordSeed ? `Seed: ${goalWordSeed}` : '';
         startTimer();
       }
 
