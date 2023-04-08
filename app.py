@@ -520,7 +520,7 @@ def definition():
         response = requests.get(url).json()[0]
         definition = response['meanings'][0]['definitions'][0]['definition']
     except:
-        print(f'failed to get definiition for {word}')
+        print(f'failed to get definition for {word}')
     return _process_response(definition)
 
 @app.route("/leaderboard_names", methods=['POST', 'OPTIONS'])
