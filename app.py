@@ -9,7 +9,7 @@ from typing import Optional, Any
 import threading
 import json
 from enum import Enum
-from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK, VERY_HARD_WORDS, CHARACTER_WORDS, TEST
+from words import DEFAULT_WORDS, EASY_PDT_WORDS, HARD_PDT_WORDS, HARD_MATH_WORDS, HOWITZER, TULLE, US, UK, VERY_HARD_WORDS, CHARACTER_WORDS, TEST, BANNED_VINTAGE_CARDS
 import random
 import time
 import re
@@ -50,6 +50,7 @@ class GoalWordType(Enum):
     US = 'us'
     UK = 'uk'
     CHARACTERS = 'characters'
+    VINTAGE = 'vintage'
 
 word_type_to_words_list = {
     GoalWordType.TEST: TEST,
@@ -63,6 +64,8 @@ word_type_to_words_list = {
     GoalWordType.US: US,
     GoalWordType.UK: UK,
     GoalWordType.CHARACTERS: CHARACTER_WORDS,
+    GoalWordType.VINTAGE: BANNED_VINTAGE_CARDS,
+
 }
 
 
