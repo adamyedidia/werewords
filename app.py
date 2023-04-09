@@ -255,7 +255,7 @@ def make_word_into_hint():
 
 # For api costs, don't send all messages always, at most 20 pairs of Qs/As
 def get_relevant_messages(messages):
-    return messages if len(messages) < 40 else [*messages[:10], *[messages[-30:]]]
+    return messages if len(messages) < 40 else [*messages[:10], *messages[-30:]]
 
 def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> str:    
     if not compare_digest(request.json.get('password') or '', PASSWORD):
