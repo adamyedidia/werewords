@@ -69,7 +69,7 @@ word_type_to_words_list = {
 
 
 word_type_to_seed_message = {
-    # GoalWordType.VINTAGE: "I'm thinking of a Magic: the Gathering card",
+    GoalWordType.VINTAGE: "I'm thinking of a Magic: the Gathering card",
 }
 
 def get_goal_word_type(goal_word: str) -> Optional[GoalWordType]:
@@ -101,7 +101,7 @@ def api_endpoint(f):
 @app.route("/")
 def index():
     return "<h1>Hello!</h1>"
-
+# 
 def create_app():
    return app
 
@@ -183,6 +183,7 @@ def start_new_game():
     rset('sounds_like_hints', '[]', game_id=game_id)
     rset('meaning_hints', '[]', game_id=game_id)
     rset('goal_word', goal_word, game_id=game_id)
+    rset('include_seed', 'true', game_id=game_id)
     rset('game_start_time', game_start_time, game_id=game_id)
     rset('question_count', '0', game_id=game_id)
 
@@ -263,10 +264,14 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
     goal_word = rget('goal_word', game_id=game_id)
 
     goal_word_type = get_goal_word_type(goal_word)
-
-    seed = word_type_to_seed_message.get(goal_word_type)
-
-    seed_messages = [{"role": "user", "content": seed}] if seed else []
+    
+    seed_messages = []
+    
+    include_seed = rget('include_seed', game_id=game_id)
+    
+    if include_seed and include_seed.lower() == 'true':
+        seed = word_type_to_seed_message.get(goal_word_type)
+        seed_messages = [{"role": "user", "content": seed}] if seed else []
 
     messages_for_openai = [
                 {"role": "system", "content": "You are a player in a fun game."},
@@ -538,6 +543,23 @@ def definition():
     except:
         print(f'failed to get definition for {word}')
     return _process_response(definition)
+
+@app.route('/include_seed', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def set_include_seed():
+    v = request.json.get('includeSeed')
+    v = str(v) if v is not None else v
+    game_id = request.json.get('gameId')
+    if v is None or game_id is None:
+        return _process_response('Must pass includeSeed and gameId')    
+    if v.lower() == 'false':
+        rset('include_seed', 'false', game_id=game_id)
+        return _process_response(False)
+    if v.lower() == 'true':
+        rset('include_seed', 'true', game_id=game_id)
+        return _process_response(True)
+    return _process_response(f'Invalid value ${v} for including seed')
+    
 
 @app.route('/seed_messages', methods=['POST', 'OPTIONS'])
 @cross_origin()

@@ -11,6 +11,7 @@ const inputField = document.getElementById('new-word-text-field');
 const timerDisplay = document.getElementById('timer-display');
 const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
 let victory = false;
+let seedActive = true;
 
 const handleKeyDown = async (event) => {
     if (event.ctrlKey) {
@@ -27,6 +28,10 @@ const handleKeyDown = async (event) => {
     }
     if (event.key === 'r') {
         await rootsReminder();
+    }
+    if (event.key === 'a') {
+        await toggleSeedActive();
+        seedDisplay.style.color = seedActive ? 'black' : 'red';
     }
     if (event.key === 'd') {
 
@@ -530,7 +535,6 @@ function removeHint() {
     mousedOver && removeQuestionAreaBubble(mousedOver)
 }
 
-
 function processQuestion(question, useThisRow, useThisColumn) {
     const bubble = document.createElement('div');
     bubble.className = 'new-question-bubble speech-bubble';
@@ -706,6 +710,24 @@ async function getGoalWordSeed(goalWord) {
     const data = await response.json();
     return data
 }
+
+// This just assumes it works. Doesn't seem that important to get right so just fine with that for now.
+async function toggleSeedActive() {
+    let newValue = seedActive ? false : true;
+    const body = JSON.stringify({ includeSeed: newValue , gameId })
+    const requestOptions = {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+    }
+    const response = await fetch(`${URL}/include_seed`, requestOptions);
+    const data = await response.json();
+    seedActive = newValue;
+    return data
+}
+
+
 
 async function startNewGame() {
     try {  
