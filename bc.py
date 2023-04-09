@@ -60,6 +60,7 @@ def splitIntoArgs(s):
     return [arg, ret + [s[j:-1]]]
 
 def bc(s):
+    s = s.replace(' ','')
     v = None
     try:
         v = float(s)
