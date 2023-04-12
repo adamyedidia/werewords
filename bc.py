@@ -17,7 +17,7 @@ d = {
         '_anonymous_times': (prod, '[2|3] = 6'),
         '_anonymous_plus': (add, '[2:3] = 5'),
         'div': (lambda x, y: x / y, 'div[2:3] = 2/3'),
-        'pow': (lambda x, y: x ** y, 'pow[2:3] = 9'),
+        'pow': (lambda x, y: x ** y, 'pow[2:3] = 8'),
         'equal': (lambda x, y: 1 if x == y else 0, 'equal[2:2] = 1'),
         'and': (lambda x, y: x and y, 'and[0:1] = 0'),
         'or': (lambda x, y: x or y, 'or[0:1] = 1'),
