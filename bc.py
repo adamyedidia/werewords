@@ -1,5 +1,7 @@
+import re
 import random
 import time
+from enum import Enum
 
 def add(*nums):
     ret = 0
@@ -13,15 +15,38 @@ def prod(*nums):
         ret *= num
     return ret
 
-d = {
-        '_anonymous_times': (prod, '[2|3] = 6'),
-        '_anonymous_plus': (add, '[2:3] = 5'),
+def _and(*nums):
+    if not nums:
+        raise(Exception("Arguments to 'and' can't be empty"))
+    ret = nums[0]
+    for num in nums[1:]:
+        ret = ret and num
+    return ret
+
+def _or(*nums):
+    if not nums:
+        raise(Exception("Arguments to 'or' can't be empty"))
+    ret = nums[0]
+    for num in nums[1:]:
+        ret = ret or num
+    return ret
+
+def _equal(*nums):
+    return int(len(set(nums)) <= 1)
+
+class AnonymousFunctions(str, Enum):
+    TIMES = '_anonymous_times'
+    PLUS = '_anonymous_plus'
+
+functions = {
+        AnonymousFunctions.TIMES: (prod, '[2|3] = 6'),
+        AnonymousFunctions.PLUS: (add, '[2:3] = 5'),
         'div': (lambda x, y: x / y, 'div[2:3] = 2/3'),
         'pow': (lambda x, y: x ** y, 'pow[2:3] = 8'),
-        'equal': (lambda x, y: 1 if x == y else 0, 'equal[2:2] = 1'),
-        'and': (lambda x, y: x and y, 'and[0:1] = 0'),
-        'or': (lambda x, y: x or y, 'or[0:1] = 1'),
-        'gt': (lambda x, y: 1 if x > y else 0, 'gt[2:3] = 0'),
+        'equal': (_equal, 'equal[2:2] = 1'),
+        'and': (_and, 'and[0:1] = 0'),
+        'or': (_or, 'or[0:1] = 1'),
+        'gt': (lambda x, y: int(x > y), 'gt[2:3] = 0'),
         'mod': (lambda x, y: x % y, 'mod[3:2] = 1'),
         'rand': (lambda : random.random(), 'rand[] = random between 0 and 1'),
         'if': (lambda x, y, z: y if x else z, 'if[1:3:4] = 4'),
@@ -29,50 +54,68 @@ d = {
         'time': (lambda : time.time(), 'time[] = 1680909037')
     }
 
-def splitIntoArgs(s):
-    arg = None
-    if s[0] != '[':
-        i = s.index('[')
-        arg = s[:i].lower()
-        s = s[i:]
-    if s == '[]':
-        return [arg, []]
-    ret = []
-    j = 1
-    count_parentheses = 0
-    for i in range(len(s)):
-        if s[i] == '[':
-            count_parentheses += 1
-        elif s[i] == ']':
-            count_parentheses -= 1
-        elif s[i] == '|' and count_parentheses == 1:
-            if arg and arg != '_anonymous_times':
-                raise(Exception('| used as argument delimiter?'))
-            ret.append(s[j:i])
-            j = i + 1
-            arg = '_anonymous_times'
-        elif s[i] == ':' and count_parentheses == 1:
-            if arg == '_anonymous_times':
-                raise(Exception("mixing '|' and ':'"))
-            ret.append(s[j:i])
-            j = i + 1
-            arg = arg if arg else '_anonymous_plus'
-    return [arg, ret + [s[j:-1]]]
+regex_matches = [
+    *[x for x in functions.keys() if isinstance(x, str)],
+    "-?[0-9]+\.?[0-9]*",
+    ":",
+    "\[",
+    "\]",
+    "\|",
+]
 
-def bc(s):
-    s = s.replace(' ','')
-    v = None
-    try:
-        v = float(s)
-    except:
-        pass
-    if v is not None:
-        return v
-    f, args = splitIntoArgs(s)
-    if f not in d:
-        raise(Exception(f'unknown function {f}'))
-    return d[f][0](*[bc(x) for x in args])
+regex_string = '|'.join(regex_matches)
 
-def bc_functions():
-    return {k: d[k][1] for k in d.keys()}
+def tokenize(input):
+    ret = re.findall(regex_string, input)
+    if "".join(ret) != input.replace(" ","").replace("\n", ""):
+        raise(Exception('Unrecognized tokens in input string'))
+    return ret
 
+def evaluate_inner(expression):
+    
+    stack = []
+
+    def push(l, x):
+        l += [x]
+
+    def process_token(token):
+        if token != ']':
+            push(stack, token)
+        
+        else:
+            args = []
+            function = None
+            recent_value = stack.pop()
+            while recent_value != '[':
+                if recent_value == ':':
+                    if function is not None:
+                        raise(Exception('Both pipe and colon used as delimiter'))
+                elif recent_value == '|':
+                    function = AnonymousFunctions.TIMES
+                else:
+                    push(args, float(recent_value))
+                recent_value = stack.pop()
+            if stack and stack[-1] in functions:
+                if function is not None:
+                    raise(Exception(f'Pipe used as delimiter for function {stack[-1]}'))
+                function = stack[-1]
+                stack.pop()
+            function = function if function else AnonymousFunctions.PLUS
+            args.reverse()
+            push(stack, functions[function][0](*args))
+
+
+    for token in expression:
+        process_token(token)
+    
+    return stack
+
+def evaluate(code):
+    v = evaluate_inner(tokenize(code.lower()))
+    if len(v) == 1:
+        return float(v[0])
+    else:
+        raise(Exception('Malformed input'))
+
+def list_functions():
+    return {k: v[1] for k, v in functions.items()}

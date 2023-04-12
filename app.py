@@ -17,7 +17,7 @@ from secrets import compare_digest, token_hex
 from redis_utils import rget, rset
 from functools import wraps
 from threading import Lock
-from bc import bc, bc_functions
+import bc
 
 app = Flask(__name__)
 CORS(app)
@@ -591,7 +591,7 @@ def evaluate_bc():
     code = request.json.get('bc')
 
     try:
-        return _process_response(bc(code))
+        return _process_response(bc.evaluate(code))
     except Exception as e:
         return _process_response(str(e))
 
@@ -599,7 +599,7 @@ def evaluate_bc():
 @app.route("/bc/functions", methods=['POST','OPTIONS'])
 @cross_origin()
 def get_bc_functions():
-    return _process_response(bc_functions())
+    return _process_response(bc.list_functions())
 
 # Start the server
 if __name__ == '__main__':

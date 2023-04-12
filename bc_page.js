@@ -27,7 +27,7 @@ async function getFunctions() {
 }
 
 function isNumeric(str) {
-  var regex = /^[0-9.]+$/;
+  var regex = /^-?[0-9.]+$/;
   
   return regex.test(str);
 }
