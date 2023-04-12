@@ -770,6 +770,8 @@ async function startNewGame() {
         [hasGoalWordSeed, goalWordSeed] = await getGoalWordSeed(goalWord);
         goalWordDisplay.textContent = `The goal word is ${goalWord}`;
         seedDisplay.textContent = hasGoalWordSeed ? `Seed: ${goalWordSeed}` : '';
+        seedActive = true;
+        seedDisplay.style.color = 'black';
         startTimer();
       }
 
