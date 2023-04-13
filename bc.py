@@ -15,22 +15,6 @@ def prod(*nums):
         ret *= num
     return ret
 
-def _and(*nums):
-    if not nums:
-        raise(Exception("Arguments to 'and' can't be empty"))
-    ret = nums[0]
-    for num in nums[1:]:
-        ret = ret and num
-    return ret
-
-def _or(*nums):
-    if not nums:
-        raise(Exception("Arguments to 'or' can't be empty"))
-    ret = nums[0]
-    for num in nums[1:]:
-        ret = ret or num
-    return ret
-
 def _equal(*nums):
     return int(len(set(nums)) <= 1)
 
@@ -39,7 +23,9 @@ class SpecialFunctions(str, Enum):
     PLUS = '_anonymous_plus'
     IF = 'if'
     LET = 'let'
-
+    OR = 'or'
+    AND = 'and'
+    
 def _raise(e):
     raise e
 
@@ -47,8 +33,6 @@ functions = {
         'div': (lambda x, y: x / y, 'div[2:3] = 2/3'),
         'pow': (lambda x, y: x ** y, 'pow[2:3] = 8'),
         'equal': (_equal, 'equal[2:2] = 1'),
-        'and': (_and, 'and[0:1] = 0'),
-        'or': (_or, 'or[0:1] = 1'),
         'gt': (lambda x, y: int(x > y), 'gt[2:3] = 0'),
         'mod': (lambda x, y: x % y, 'mod[3:2] = 1'),
         'rand': (lambda : random.random(), 'rand[] = random between 0 and 1'),
@@ -61,10 +45,11 @@ functions = {
 special_functions = {
         SpecialFunctions.TIMES: '[2|3] = 6',
         SpecialFunctions.PLUS: '[2:3] = 5',
-        SpecialFunctions.IF: 'if[1:2:3]',
-        SpecialFunctions.LET: 'let[apple:2:[apple:3]]'
+        SpecialFunctions.IF: 'if[1:2:3] = 2',
+        SpecialFunctions.LET: 'let[apple:2:[apple:3]] = 5',
+        SpecialFunctions.AND: 'and[1:0] = 0',
+        SpecialFunctions.OR: 'or[1:0] = 1'
     }
-
 
 def splitIntoArgs(s):
     arg = s.split('[')[0].lower() or None 
@@ -136,9 +121,26 @@ def evaluate(s, env):
         if len(args) != 3:
             raise(Exception('if takes 3 arguments'))
         return evaluate(args[1], env) if evaluate(args[0], env) else evaluate(args[2], env)
+    if f == SpecialFunctions.AND:
+        if not args:
+            raise(Exception("Arguments to 'and' can't be empty"))
+        ret = evaluate(args[0], env)
+        for arg in args[1:]:
+            ret = ret and evaluate(arg, env)
+        return ret
+    if f == SpecialFunctions.OR:
+        if not args:
+            raise(Exception("Arguments to 'or' can't be empty"))
+        ret = evaluate(args[0], env)
+        for arg in args[1:]:
+            ret = ret or evaluate(arg, env)
+        return ret
     return functions[f][0](*[evaluate(x, env) for x in args])
 
 function_descriptions = {k: v[1] for k, v in functions.items()}
 
 def list_functions():
     return dict(function_descriptions, **special_functions)
+
+# if __name__ == '__main__':
+    # print(evaluate_outer(input('>>> ')))
