@@ -1,7 +1,7 @@
-import re
 import random
 import time
 from enum import Enum
+
 
 def add(*nums):
     ret = 0
@@ -34,13 +34,16 @@ def _or(*nums):
 def _equal(*nums):
     return int(len(set(nums)) <= 1)
 
-class AnonymousFunctions(str, Enum):
+class SpecialFunctions(str, Enum):
     TIMES = '_anonymous_times'
     PLUS = '_anonymous_plus'
+    IF = 'if'
+    LET = 'let'
+
+def _raise(e):
+    raise e
 
 functions = {
-        AnonymousFunctions.TIMES: (prod, '[2|3] = 6'),
-        AnonymousFunctions.PLUS: (add, '[2:3] = 5'),
         'div': (lambda x, y: x / y, 'div[2:3] = 2/3'),
         'pow': (lambda x, y: x ** y, 'pow[2:3] = 8'),
         'equal': (_equal, 'equal[2:2] = 1'),
@@ -51,71 +54,91 @@ functions = {
         'rand': (lambda : random.random(), 'rand[] = random between 0 and 1'),
         'if': (lambda x, y, z: y if x else z, 'if[1:3:4] = 4'),
         'abs': (lambda x : abs(x), 'abs[-3] = 3'),
-        'time': (lambda : time.time(), 'time[] = 1680909037')
+        'time': (lambda : time.time(), 'time[] = 1680909037'),
+        'error': (lambda : _raise(Exception('user requested error')), 'error[] = user requested error')
     }
 
-regex_matches = [
-    *[x for x in functions.keys() if isinstance(x, str)],
-    "-?[0-9]+\.?[0-9]*",
-    ":",
-    "\[",
-    "\]",
-    "\|",
-]
-
-regex_string = '|'.join(regex_matches)
-
-def tokenize(input):
-    ret = re.findall(regex_string, input)
-    if "".join(ret) != input.replace(" ","").replace("\n", ""):
-        raise(Exception('Unrecognized tokens in input string'))
-    return ret
-
-def evaluate_inner(expression):
-    
-    stack = []
-
-    def push(l, x):
-        l += [x]
-
-    def process_token(token):
-        if token != ']':
-            push(stack, token)
-        
-        else:
-            args = []
-            function = None
-            recent_value = stack.pop()
-            while recent_value != '[':
-                if recent_value == ':':
-                    if function is not None:
-                        raise(Exception('Both pipe and colon used as delimiter'))
-                elif recent_value == '|':
-                    function = AnonymousFunctions.TIMES
-                else:
-                    push(args, float(recent_value))
-                recent_value = stack.pop()
-            if stack and stack[-1] in functions:
-                if function is not None:
-                    raise(Exception(f'Pipe used as delimiter for function {stack[-1]}'))
-                function = stack[-1]
-                stack.pop()
-            function = function if function else AnonymousFunctions.PLUS
-            args.reverse()
-            push(stack, functions[function][0](*args))
+special_functions = {
+        SpecialFunctions.TIMES: '[2|3] = 6',
+        SpecialFunctions.PLUS: '[2:3] = 5',
+        SpecialFunctions.IF: 'if[1:2:3]',
+        SpecialFunctions.LET: 'let[apple:2:[apple:3]]'
+    }
 
 
-    for token in expression:
-        process_token(token)
-    
-    return stack
+def splitIntoArgs(s):
+    arg = s.split('[')[0].lower() or None 
+    s = s.removeprefix(arg) if arg else s
+    if len(s) <= 1:
+        raise Exception(f'Failed recursing on {arg + s}') 
+    if not (s[0] == '[' and s[-1] == ']'):
+        raise Exception('Parentheses mismatch')
+    if s == '[]':
+        return [arg, []]
+    args = []
+    j = 1
+    count_parentheses = 0
+    for i in range(len(s)):
+        if s[i] == '[':
+            count_parentheses += 1
+        elif s[i] == ']':
+            count_parentheses -= 1
+        elif s[i] == '|' and count_parentheses == 1:
+            if arg and arg != AnonymousFunctions.TIMES:
+                raise(Exception('| used as argument delimiter?'))
+            args.append(s[j:i])
+            j = i + 1
+            arg = SpecialFunctions.TIMES
+        elif s[i] == ':' and count_parentheses == 1:
+            if arg == '_anonymous_times':
+                raise(Exception("mixing '|' and ':'"))
+            args.append(s[j:i])
+            j = i + 1
+            arg = arg if arg else SpecialFunctions.PLUS
+    return [arg, args + [s[j:-1]]]
 
-def evaluate(code):
-    v = evaluate_inner(tokenize(code.lower()))
-    if len(v) == 1:
-        return float(v[0])
-    else:
-        raise(Exception('Malformed input'))
+def try_literal(s, env):
+    try:
+        return float(s)
+    except:
+        pass
+    try:
+        return env[s]
+    except:
+        pass
+    return None
+
+def evaluate_outer(s):
+    return evaluate(s.replace(' ','').replace('\n',''), {})
+
+def evaluate(s, env):
+    literal_value = try_literal(s, env)
+    if literal_value is not None:
+        return literal_value
+    f, args = splitIntoArgs(s)
+    try:
+        f = SpecialFunctions(f)
+    except:
+        pass
+    if f not in functions and f not in special_functions:
+        raise(Exception(f'unknown function {f} called on {args}'))
+    if f == SpecialFunctions.LET:
+        if len(args) != 3:
+            raise(Exception('let binding takes 3 arguments'))
+        return evaluate(args[2], {**env, args[0]: evaluate(args[1], env)})
+    if f == SpecialFunctions.TIMES:
+        return prod(*[evaluate(x, env) for x in args])
+    if f == SpecialFunctions.PLUS:
+        return add(*[evaluate(x, env) for x in args])   
+    # Need a special case to not evaluate the arguments of if when the condition is false
+    # Not that that really matters since errors are rare but it lets you do if plus error
+    if f == SpecialFunctions.IF:
+        if len(args) != 3:
+            raise(Exception('if takes 3 arguments'))
+        return evaluate(args[1], env) if evaluate(args[0], env) else evaluate(args[2], env)
+    return functions[f][0](*[evaluate(x, env) for x in args])
+
+function_descriptions = {k: v[1] for k, v in functions.items()}
 
 def list_functions():
-    return {k: v[1] for k, v in functions.items()}
+    return dict(function_descriptions, **special_functions)

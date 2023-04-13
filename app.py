@@ -591,7 +591,7 @@ def evaluate_bc():
     code = request.json.get('bc')
 
     try:
-        return _process_response(bc.evaluate(code))
+        return _process_response(bc.evaluate_outer(code))
     except Exception as e:
         return _process_response(str(e))
 
