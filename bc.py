@@ -52,10 +52,11 @@ special_functions = {
     }
 
 def splitIntoArgs(s):
-    arg = s.split('[')[0].lower() or None 
+    arg = s.split('[')[0].lower() 
     s = s.removeprefix(arg) if arg else s
     if len(s) <= 1:
-        raise Exception(f'Failed recursing on {arg + s}') 
+        m = 'empty string' if not s else arg + s 
+        raise Exception(f'Failed recursing on {m}') 
     if not (s[0] == '[' and s[-1] == ']'):
         raise Exception('Parentheses mismatch')
     if s == '[]':
@@ -69,14 +70,14 @@ def splitIntoArgs(s):
         elif s[i] == ']':
             count_parentheses -= 1
         elif s[i] == '|' and count_parentheses == 1:
-            if arg and arg != AnonymousFunctions.TIMES:
+            if arg and arg != SpecialFunctions.TIMES:
                 raise(Exception('| used as argument delimiter?'))
             args.append(s[j:i])
             j = i + 1
             arg = SpecialFunctions.TIMES
         elif s[i] == ':' and count_parentheses == 1:
-            if arg == '_anonymous_times':
-                raise(Exception("mixing '|' and ':'"))
+            if arg == SpecialFunctions.TIMES:
+                raise(Exception("multiplication must be pipe delimited"))
             args.append(s[j:i])
             j = i + 1
             arg = arg if arg else SpecialFunctions.PLUS
