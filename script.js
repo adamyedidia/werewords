@@ -4,6 +4,7 @@ const startingQuestions = ['Is it a noun?', 'Is it a verb?', 'Is it an adjective
 // the default is just fine, but I guess I'll leave it here in case.
 const startingRows = [0, 0, 0]
 const startingColumns = [0, 1, 2]
+const commandBubbles = document.getElementById('command-bubbles');
 const questionArea = document.getElementById('question-area');
 const messages = document.getElementById('messages');
 const goalWordTypeDisplay = document.getElementById('new-word-type');
@@ -525,7 +526,7 @@ function rootsReminder() {
     const questionAnswerPairId = generateQuestionAnswerPairId();
 
     addMessage(`Q: I'm a bit stuck. What should I do?`, true, questionAnswerPairId);
-    addMessage(`A: Try guessing a word that shares a root with a word in the list of hints`, false, questionAnswerPairId);
+    addMessage(`A: Try guessing a word that shares a root with a word in the list of hints!`, false, questionAnswerPairId);
 
     askQuestion('', 'roots_reminder', questionAnswerPairId);
 }
@@ -928,6 +929,20 @@ function onLoad () {
     if (localStorage.getItem('goalWordType')) {
         goalWordTypeDisplay.value = localStorage.getItem('goalWordType'); 
     }
+
+    const hintsBubble = document.createElement('li'); 
+    const rootsBubble = document.createElement('li');
+   
+    hintsBubble.className = 'command-bubble';
+    rootsBubble.className = 'command-bubble';
+    hintsBubble.textContent = "Remember your hints. Try guessing my word!";
+    rootsBubble.textContent = "Try guessing a word that shares a root with a word in the list of hints!";
+    hintsBubble.addEventListener('click', hintReminder); 
+    rootsBubble.addEventListener('click', rootsReminder); 
+
+    commandBubbles.appendChild(hintsBubble);
+    
+    commandBubbles.appendChild(rootsBubble);
 
     startNewGame();
     mousedOver = null;
