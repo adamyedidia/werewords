@@ -142,8 +142,7 @@ const goalWordDisplay = document.getElementById('goal-word-display');
 const seedDisplay = document.getElementById('seed-display');
 
 goalWordDisplay.addEventListener('mouseenter', () => {
-    
-    goalWordDisplay.title = `Disclaimer: Random free dictionary api. Often dubious. \n \n${goalWordDefinition}`;
+    goalWordDisplay.title = `According to chatgpt, the definition of the goal word is: \n\n${goalWordDefinition}`;
 });
 
 const URL = CONFIG.URL;

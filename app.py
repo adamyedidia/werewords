@@ -534,16 +534,26 @@ def edit_question():
 @cross_origin()
 def definition():
     word = request.json.get('word')
-    url = f'https://api.dictionaryapi.dev/api/v2/entries/en/{word}'
 
-    definition = "Failed to get definition"
+    messages_for_openai = [
+        {'role': 'user', 'content': f'What is the definition of {word}?'},
+    ]
+
+    # Sometimes this 500s and the frontend is sad if it doesn't get a valid response. 
+    # Easier to fix on this side.
     try:
-        response = requests.get(url).json()[0]
-        definition = response['meanings'][0]['definitions'][0]['definition']
+	    response = openai.ChatCompletion.create(
+	        model="gpt-3.5-turbo",
+	        messages=messages_for_openai,
+	        temperature=0,
+	        n=1,
+	    )
+	
+	    return _process_response(response['choices'][0]['message']['content'])
     except:
-        print(f'failed to get definition for {word}')
-    return _process_response(definition)
-
+        return _process_response('Failed to get definition')
+	
+	
 @app.route('/include_seed', methods=['POST', 'OPTIONS'])
 @cross_origin()
 def set_include_seed():
