@@ -19,6 +19,7 @@ from functools import wraps
 from threading import Lock
 import bc
 
+
 app = Flask(__name__)
 CORS(app)
 logger = logging.getLogger(__name__)
@@ -604,6 +605,13 @@ def evaluate_bc():
         return _process_response(bc.evaluate_outer(code))
     except Exception as e:
         return _process_response(str(e))
+
+@app.route("/bc/format", methods=['POST','OPTIONS'])
+@cross_origin()
+def format_bc():
+    code = request.json.get('bc')
+
+    return _process_response(bc.format(code))
 
 
 @app.route("/bc/functions", methods=['POST','OPTIONS'])

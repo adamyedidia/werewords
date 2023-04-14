@@ -8,10 +8,22 @@ async function evaluate(bc) {
         method: 'POST',
         mode: 'cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bc: bc }),
+        body: JSON.stringify({ bc }),
     }
 
     const response = await fetch(`${URL}/bc`, requestOptions);
+    return await response.json();
+}
+
+async function format(bc) {
+    const requestOptions = {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bc }),
+    }
+
+    const response = await fetch(`${URL}/bc/format`, requestOptions);
     return await response.json();
 }
 
@@ -38,9 +50,18 @@ async function handleSubmitBc() {
     bcAnswer.textContent = answer;
 }
 
+async function handleFormatBc() {
+    let answer = await format(bcInput.value);
+    bcInput.value = answer;
+}
+
 bcInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && event.ctrlKey) {
         handleSubmitBc();
+    }
+    if (event.key === 'Enter' && event.altKey) {
+        console.log('sup');
+        handleFormatBc();
     }
 })
 

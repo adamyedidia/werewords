@@ -1,7 +1,7 @@
 import random
 import time
 from enum import Enum
-
+import black
 
 def add(*nums):
     ret = 0
@@ -142,6 +142,24 @@ function_descriptions = {k: v[1] for k, v in functions.items()}
 
 def list_functions():
     return dict(function_descriptions, **special_functions)
+
+substitutions = {
+    '[': '(',
+    ']': ')',
+    ':' : '+',
+    'and': '_and',
+    'or': '_or',
+    'if': '_if',
+}
+
+def format(bc):
+    for k, v in substitutions.items():
+        bc = bc.replace(k, v)
+    bc = black.format_str(bc, mode=black.FileMode(line_length=10, magic_trailing_comma=False))
+    for k, v in substitutions.items():
+        bc = bc.replace(v, k)
+    return bc
+
 
 # if __name__ == '__main__':
     # print(evaluate_outer(input('>>> ')))
