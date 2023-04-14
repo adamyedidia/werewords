@@ -60,7 +60,6 @@ bcInput.addEventListener('keydown', (event) => {
         handleSubmitBc();
     }
     if (event.key === 'Enter' && event.altKey) {
-        console.log('sup');
         handleFormatBc();
     }
 })
