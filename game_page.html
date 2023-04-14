@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <style>
+        :root { --command-color: orange }
         .speech-bubble {
             position: relative;
             background: rgba(0, 0, 255, 1);
@@ -30,8 +31,8 @@
 
         .command-bubble {
             position: relative;
-            background: rgba(210, 100, 100, 1);
-	        border-top-color: rgba(210, 100, 100, 1);
+            background: var(--command-color);
+	        border-top-color: var(--command-color);
             border-radius: 5px;
             padding: 15px;
             color: white;
@@ -54,8 +55,16 @@
             margin-bottom: -15px;
         }
 
+        .answer-command {
+            background-color: var(--command-color);
+;
+        }
 
-        
+        .answer-command:after {
+            border-top-color: var(--command-color);
+;
+        }
+
         .answer-yes {
             background-color: darkgreen;
         }

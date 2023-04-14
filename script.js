@@ -210,6 +210,8 @@ function addMessage(message, isQuestion, questionAnswerPairId) {
         li.classList.add('answer-yes');
     } else if (!isQuestion && message.trim().toLowerCase() === "a: no") {
         li.classList.add('answer-no');
+    } else {
+        li.classList.add('answer-command')
     }
 
     // Set the questionAnswerPairId as a data attribute
