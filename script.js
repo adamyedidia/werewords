@@ -767,7 +767,6 @@ async function startNewGame() {
       await getNewQuestions(null, null);
 
       if (goalWord) {
-        goalWordDefinition = await getGoalWordDefinition(goalWord);
         goalWordTime = await getGoalWordTime(goalWord);
         [hasGoalWordSeed, goalWordSeed] = await getGoalWordSeed(goalWord);
         goalWordDisplay.textContent = `The goal word is ${goalWord}`;
@@ -775,6 +774,7 @@ async function startNewGame() {
         seedActive = true;
         seedDisplay.style.color = 'black';
         startTimer();
+        goalWordDefinition = await getGoalWordDefinition(goalWord);
       }
 
 }
