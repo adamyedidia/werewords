@@ -169,7 +169,7 @@ substitutions = {
     'or': '_or',
     'if': '_if',
     'lambda': '_lambda',
-    '$': '_',
+    '$': '_dollar_sign_asdf',
 }
 
 def format(bc):
