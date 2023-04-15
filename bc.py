@@ -108,8 +108,8 @@ def try_literal(s, env):
 
 def evaluate_outer(s):
     answer = evaluate(s.replace(' ','').replace('\n',''), {})
-    if isinstance(answer, str):
-            return 'lambda: ' + answer
+    if isinstance(answer, tuple):
+            return 'lambda: ' + answer[0]
     else:
         return answer
 
@@ -122,14 +122,15 @@ def evaluate(s, env):
         f = SpecialFunctions(f)
     except:
         pass
-    if f not in functions and f not in special_functions and f not in env:
+    lambdas = [k for k, v in env.items() if isinstance(v, tuple)]
+    if f not in functions and f not in special_functions and f not in lambdas:
         raise(Exception(f'unknown function {f} called on {args}'))
-    if f in env:
-        return evaluate_lambda(env[f], env, args)
+    if f in lambdas:
+        return evaluate_lambda(env[f][0], env, args)
     if f == SpecialFunctions.LAMBDA:
         if len(args) != 1:
             raise(Exception('lambda takes 1 argument'))
-        return args[0]
+        return (args[0], True)
     if f == SpecialFunctions.LET:
         if len(args) != 3:
             raise(Exception('let binding takes 3 arguments'))
