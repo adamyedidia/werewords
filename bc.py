@@ -26,7 +26,8 @@ class SpecialFunctions(str, Enum):
     OR = 'or'
     AND = 'and'
     LAMBDA = 'lambda'
-    
+    IFERROR = 'iferror'
+
 def _raise(e):
     raise e
 
@@ -52,11 +53,11 @@ special_functions = {
         SpecialFunctions.LET: 'let[apple:2:[apple:3]] = 5',
         SpecialFunctions.AND: 'and[1:0] = 0',
         SpecialFunctions.OR: 'or[1:0] = 1',
-        SpecialFunctions.LAMBDA: lambda_example + ' = 11'
+        SpecialFunctions.LAMBDA: lambda_example + ' = 11',
+        SpecialFunctions.IFERROR: 'iferror[error[]:2] = 2',
     }
 
 def evaluate_lambda(f, env, args):
-    f = ":".join(f)
     env = {**env, **{'$' + str(i + 1) : evaluate(x, env) for i, x in enumerate(args)}}
     return evaluate(f, env)            
 
@@ -106,7 +107,11 @@ def try_literal(s, env):
     return None
 
 def evaluate_outer(s):
-    return evaluate(s.replace(' ','').replace('\n',''), {})
+    answer = evaluate(s.replace(' ','').replace('\n',''), {})
+    if isinstance(answer, str):
+            return 'lambda: ' + answer
+    else:
+        return answer
 
 def evaluate(s, env):
     literal_value = try_literal(s, env)
@@ -122,7 +127,9 @@ def evaluate(s, env):
     if f in env:
         return evaluate_lambda(env[f], env, args)
     if f == SpecialFunctions.LAMBDA:
-        return args
+        if len(args) != 1:
+            raise(Exception('lambda takes 1 argument'))
+        return args[0]
     if f == SpecialFunctions.LET:
         if len(args) != 3:
             raise(Exception('let binding takes 3 arguments'))
@@ -159,9 +166,13 @@ def evaluate(s, env):
         for arg in args[1:]:
             ret = ret or evaluate(arg, env)
         return ret
-    if f == SpecialFunctions.LAMBDA:
-        if not args:
-            raise(Exception("Arguments to 'lambda' can't be empty"))
+    if f == SpecialFunctions.IFERROR:
+        if len(args) != 2:
+            raise(Exception('iferror takes 2 arguments'))
+        try:
+            return evaluate(args[0], env)
+        except:
+            return evaluate(args[1], env)
     return functions[f][0](*[evaluate(x, env) for x in args])
 
 function_descriptions = {k: v[1] for k, v in functions.items()}
