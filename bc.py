@@ -61,6 +61,8 @@ def evaluate_lambda(f, env, args):
     return evaluate(f, env)            
 
 def splitIntoArgs(s):
+    if '[' not in s:
+        raise Exception(f'expected literal or function call but got {s if s else "empty string"}')
     arg = s.split('[')[0].lower() 
     s = s.removeprefix(arg) if arg else s
     if len(s) <= 1:
@@ -126,6 +128,12 @@ def evaluate(s, env):
             raise(Exception('let binding takes 3 arguments'))
         if args[0].startswith('$'):
             raise(Exception('$ is reserved for lambda arguments'))
+        try:
+            float(args[0])
+        except:
+            pass
+        else:
+            raise(Exception("can't rename a number"))
         return evaluate(args[2], {**env, args[0]: evaluate(args[1], env)})
     if f == SpecialFunctions.TIMES:
         return prod(*[evaluate(x, env) for x in args])
@@ -181,4 +189,4 @@ def format(bc):
     return bc
 
 if __name__ == '__main__':
-    print(format(input('')))
+    print(evaluate_outer(input('')))
