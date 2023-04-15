@@ -165,20 +165,20 @@ substitutions = {
     '[': '(',
     ']': ')',
     ':' : '+',
-    'and': '_and',
-    'or': '_or',
-    'if': '_if',
-    'lambda': '_lambda',
-    '$': '_dollar_sign',
+    'and': '_and_asdf',
+    'or': '_or_asdf',
+    'if': '_if_asdf',
+    'lambda': '_lambda_asdf',
+    '$': '_dollar_sign_asdf',
 }
 
 def format(bc):
     for k, v in substitutions.items():
-        bc = bc.replace(k, v + '_asdf')
+        bc = bc.replace(k, v)
     bc = black.format_str(bc, mode=black.FileMode(line_length=10, magic_trailing_comma=False))
     for k, v in substitutions.items():
-        bc = bc.replace(v + '_asdf', k)
+        bc = bc.replace(v, k)
     return bc
 
 if __name__ == '__main__':
-    print(evaluate_outer(input('')))
+    print(format(input('')))
