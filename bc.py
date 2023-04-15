@@ -169,15 +169,15 @@ substitutions = {
     'or': '_or',
     'if': '_if',
     'lambda': '_lambda',
-    '$': '_dollar_sign_asdf',
+    '$': '_dollar_sign',
 }
 
 def format(bc):
     for k, v in substitutions.items():
-        bc = bc.replace(k, v)
+        bc = bc.replace(k, v + '_asdf')
     bc = black.format_str(bc, mode=black.FileMode(line_length=10, magic_trailing_comma=False))
     for k, v in substitutions.items():
-        bc = bc.replace(v, k)
+        bc = bc.replace(v + '_asdf', k)
     return bc
 
 if __name__ == '__main__':
