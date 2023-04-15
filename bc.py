@@ -25,6 +25,7 @@ class SpecialFunctions(str, Enum):
     LET = 'let'
     OR = 'or'
     AND = 'and'
+    LAMBDA = 'lambda'
     
 def _raise(e):
     raise e
@@ -42,14 +43,22 @@ functions = {
         'error': (lambda : _raise(Exception('user requested error')), 'error[] = user requested error')
     }
 
+lambda_example = 'let [ square_plus_two : lambda [ [ pow [ $1 : 2 ] : 2 ] ] : square_plus_two [ 3 ] ]'
+
 special_functions = {
         SpecialFunctions.TIMES: '[2|3] = 6',
         SpecialFunctions.PLUS: '[2:3] = 5',
         SpecialFunctions.IF: 'if[1:2:3] = 2',
         SpecialFunctions.LET: 'let[apple:2:[apple:3]] = 5',
         SpecialFunctions.AND: 'and[1:0] = 0',
-        SpecialFunctions.OR: 'or[1:0] = 1'
+        SpecialFunctions.OR: 'or[1:0] = 1',
+        SpecialFunctions.LAMBDA: lambda_example + ' = 11'
     }
+
+def evaluate_lambda(f, env, args):
+    f = ":".join(f)
+    env = {**env, **{'$' + str(i + 1) : evaluate(x, env) for i, x in enumerate(args)}}
+    return evaluate(f, env)            
 
 def splitIntoArgs(s):
     arg = s.split('[')[0].lower() 
@@ -106,11 +115,17 @@ def evaluate(s, env):
         f = SpecialFunctions(f)
     except:
         pass
-    if f not in functions and f not in special_functions:
+    if f not in functions and f not in special_functions and f not in env:
         raise(Exception(f'unknown function {f} called on {args}'))
+    if f in env:
+        return evaluate_lambda(env[f], env, args)
+    if f == SpecialFunctions.LAMBDA:
+        return args
     if f == SpecialFunctions.LET:
         if len(args) != 3:
             raise(Exception('let binding takes 3 arguments'))
+        if args[0].startswith('$'):
+            raise(Exception('$ is reserved for lambda arguments'))
         return evaluate(args[2], {**env, args[0]: evaluate(args[1], env)})
     if f == SpecialFunctions.TIMES:
         return prod(*[evaluate(x, env) for x in args])
@@ -136,6 +151,9 @@ def evaluate(s, env):
         for arg in args[1:]:
             ret = ret or evaluate(arg, env)
         return ret
+    if f == SpecialFunctions.LAMBDA:
+        if not args:
+            raise(Exception("Arguments to 'lambda' can't be empty"))
     return functions[f][0](*[evaluate(x, env) for x in args])
 
 function_descriptions = {k: v[1] for k, v in functions.items()}
@@ -150,6 +168,8 @@ substitutions = {
     'and': '_and',
     'or': '_or',
     'if': '_if',
+    'lambda': '_lambda',
+    '$': '_',
 }
 
 def format(bc):
@@ -160,6 +180,5 @@ def format(bc):
         bc = bc.replace(v, k)
     return bc
 
-
-# if __name__ == '__main__':
-    # print(evaluate_outer(input('>>> ')))
+if __name__ == '__main__':
+    print(evaluate_outer(input('')))
