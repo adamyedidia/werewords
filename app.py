@@ -143,6 +143,8 @@ def process_user_reply(user_reply: UserReply, sounds_like_hints: Optional[list[s
                 return "Try guessing my word now!"
             
     elif user_reply == UserReply.ROOTS_REMINDER:
+        if len(meaning_hints + sounds_like_hints) != 1:
+            raise Exception("Roots reminder only valid with exactly one hint")
         return (
             f"Try listing the first ten words you think of that share a lemma with at least one of the following words: {', '.join([*(meaning_hints or []), *(sounds_like_hints or [])])}"
             f"For example, colorful shares a lemma with color"

@@ -13,6 +13,8 @@ const timerDisplay = document.getElementById('timer-display');
 const grid = new Array(3).fill(null).map(() => new Array(4).fill(null));
 let victory = false;
 let seedActive = true;
+const hintsBubble = document.createElement('li'); 
+const rootsBubble = document.createElement('li');
 
 const handleKeyDown = async (event) => {
     if (event.ctrlKey) {
@@ -525,6 +527,11 @@ function hintReminder() {
 }
 
 function rootsReminder() {
+    if ((meaningHints.length + soundsLikeHints.length) != 1) {
+        showToast('Can only roots reminder with exactly one hint');
+        return
+    }
+
     const questionAnswerPairId = generateQuestionAnswerPairId();
 
     addMessage(`Q: I'm a bit stuck. What should I do?`, true, questionAnswerPairId);
@@ -829,6 +836,15 @@ function updateHintsWidget() {
       });
       soundsLikeHintsList.appendChild(li);
     });
+
+    if ((meaningHints.length + soundsLikeHints.length) > 1) {
+        rootsBubble.style.opacity = 0;
+        rootsBubble.style.cursor = 'default';
+    } else 
+    {
+        rootsBubble.style.opacity = 1;
+        rootsBubble.style.cursor = 'pointer';
+    }
   }
 
   async function deleteHint(hint, hintType) {
@@ -931,16 +947,13 @@ function onLoad () {
     if (localStorage.getItem('goalWordType')) {
         goalWordTypeDisplay.value = localStorage.getItem('goalWordType'); 
     }
-
-    const hintsBubble = document.createElement('li'); 
-    const rootsBubble = document.createElement('li');
    
     hintsBubble.className = 'command-bubble';
     rootsBubble.className = 'command-bubble';
     hintsBubble.textContent = "Remember your hints. Try guessing my word!";
     rootsBubble.textContent = "Try guessing a word that shares a root with a word in the list of hints!";
     hintsBubble.addEventListener('click', hintReminder); 
-    rootsBubble.addEventListener('click', rootsReminder); 
+    rootsBubble.addEventListener('click', () => { rootsBubble.style.opacity === '1' ? rootsReminder() : null }); 
 
     commandBubbles.appendChild(hintsBubble);
     
@@ -1026,6 +1039,19 @@ function toggleHowToPlay(event) {
       howToPlayBtnText.textContent = 'How to play';
     }
   }
+
+function showToast(message) {
+  const toast = document.createElement('div');
+
+  toast.classList.add('toast');
+  toast.textContent = message;
+
+  document.body.appendChild(toast);
+
+  setTimeout(function() {
+    toast.remove();
+  }, 3000);
+}
 
 // Add leaderboard name input widget
 const leaderboardNameWrapper = document.createElement('div');

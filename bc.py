@@ -147,8 +147,7 @@ def evaluate(s, env):
         return prod(*[evaluate(x, env) for x in args])
     if f == SpecialFunctions.PLUS:
         return add(*[evaluate(x, env) for x in args])   
-    # Need a special case to not evaluate the arguments of if when the condition is false
-    # Not that that really matters since errors are rare but it lets you do if plus error
+    # Need special cases to not evaluate dead branches of if, and, or
     if f == SpecialFunctions.IF:
         if len(args) != 3:
             raise(Exception('if takes 3 arguments'))
