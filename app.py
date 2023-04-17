@@ -334,13 +334,13 @@ def _get_response_inner(messages: list, game_id: str, leaderboard_name: str) -> 
                 if goal_word not in leaderboard_games[str_goal_word_type]:
                     leaderboard_games[str_goal_word_type][goal_word] = []
                 leaderboard_games[str_goal_word_type][goal_word].append([game_id, victory_time])
-            rset('leaderboard_games', json.dumps(leaderboard_games), game_id=None)
+            rset('leaderboard_games', json.dumps(leaderboard_games), game_id=None, ex = None)
 
         if leaderboard_name:
             leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
             if leaderboard_names.get(game_id) is None:
                 leaderboard_names[game_id] = leaderboard_name
-            rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None)
+            rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None, ex = None)
 
     return _process_response({'success': True, 'victory': victory, 'victoryTime': victory_time, 'winningQuestion': winning_question, 'goalWord': goal_word, 'questions': new_questions, 'leaderboardName': leaderboard_name, 'gameId': game_id})
 
@@ -594,7 +594,7 @@ def present_leaderboard_name():
     leaderboard_names = json.loads(rget('leaderboard_names', game_id=None) or '{}')
     if leaderboard_names.get(game_id) is None:
         leaderboard_names[game_id] = leaderboard_name
-    rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None)
+    rset('leaderboard_names', json.dumps(leaderboard_names), game_id=None, ex = None)
 
     return _process_response({'success': True})
 

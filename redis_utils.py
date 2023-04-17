@@ -10,7 +10,7 @@ def rget(key: str, *, game_id: Optional[str]) -> Optional[str]:
         raw_result = redis.get(f'{game_id}:{key}')
     return raw_result.decode('utf-8') if raw_result is not None else None
 
-def rset(key: str, value: Any, *, game_id: Optional[str], ex: int = 3600) -> None:
+def rset(key: str, value: Any, *, game_id: Optional[str], ex: Optional[int] = 3600) -> None:
     if game_id is None:
         redis.set(key, value, ex=ex)    
     else:
